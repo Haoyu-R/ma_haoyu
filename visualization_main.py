@@ -4,6 +4,8 @@
 
 import os
 import sys
+import cv2
+import pandas as pd
 from visualization_utils import *
 
 
@@ -14,7 +16,7 @@ def read_files(file_name):
     :return: three dataframe contain ego, dynamic and static respectively
     """
     if os.path.exists(
-        r'..\MDM data process\processed_data\csv\{}_dynamic.csv'.format(file_name)) and os.path.exists(
+            r'..\MDM data process\processed_data\csv\{}_dynamic.csv'.format(file_name)) and os.path.exists(
         r'..\MDM data process\processed_data\csv\{}_static.csv'.format(file_name)) and os.path.exists(
         r'..\MDM data process\processed_data\csv\{}_ego.csv'.format(file_name)):
         with open(r'..\MDM data process\processed_data\csv\{}_dynamic.csv'.format(file_name)) as tmp_dynamic:
@@ -33,18 +35,26 @@ def read_files(file_name):
 
 
 if __name__ == "__main__":
-    ego, dynamic_raw, static_raw = read_files('0_no_steering_sdf')
+    ego, dynamic_raw, static_raw = read_files('0_cv')
     # ego, dynamic_raw, static_raw = read_files('one')
     # try:
     dynamic = process_dynamic(dynamic_raw)
     static = process_static(static_raw)
+
+    play_video = True
+
+    # try:
+    if dynamic is not None and static is not None and ego is not None:
+        if play_video:
+            frame_count, cap = video(r'..\MDM data process\video\20191029_130130_3015.mp4')
+            if frame_count > 0:
+                visualization_plot = VisualizationPlot(ego, dynamic, static, play_video, frame_count, cap)
+                visualization_plot.show()
+            else:
+                print('Video file damaged')
+        else:
+            visualization_plot = VisualizationPlot(ego, dynamic, static, play_video)
+            visualization_plot.show()
     # except:
     #     print('Something went wrong when process the raw data')
     #     sys.exit(1)
-
-    if dynamic is not None and static is not None and ego is not None:
-        visualization_plot = VisualizationPlot(ego, dynamic, static)
-        visualization_plot.show()
-    else:
-        print('Something went wrong when visualization')
-        sys.exit(1)

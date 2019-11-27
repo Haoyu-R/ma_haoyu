@@ -8,7 +8,7 @@ if __name__ == "__main__":
     path = r'..\MDM data process\raw_data\csv'
     # path = r'..\MDM data process\raw_data\csv\part-00033-49c43333-5324-4175-94e0-ddfcb4b18771-c000.csv'
     # If need to run index check
-    check_valid_index = False
+    check_valid_index = True
     if os.path.isdir(path):
         csv_files_path = glob.glob(path + r'\*.csv')
         for index, csv_path in enumerate(csv_files_path):

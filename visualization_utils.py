@@ -5,6 +5,7 @@ import math
 import numpy as np
 import matplotlib.animation as animation
 import pandas as pd
+import cv2
 
 
 def process_dynamic(dynamic_df):
@@ -80,9 +81,20 @@ def process_static(static_df):
     return objs_static
 
 
+def video(path):
+    """
+    Extract video from file
+    :param path: path to video
+    :return: openCV object and total frames of video
+    """
+    cap = cv2.VideoCapture(path)
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    return frame_count, cap
+
+
 class VisualizationPlot(object):
 
-    def __init__(self, ego, dynamic, static):
+    def __init__(self, ego, dynamic, static, video_bool, *cap):
         self.ego_df = ego
         self.objs_dynamic_dict = dynamic
         self.objs_static_dict = static
@@ -93,6 +105,10 @@ class VisualizationPlot(object):
         self.anim_running = True
         self.text = ''
         self.steering_ang = True if 'steering_ang' in self.ego_df.columns else False
+        self.video_bool = video_bool
+        if self.video_bool:
+            self.cap_count = int(cap[0])
+            self.cap = cap[1]
         # Create figure and axes
         self.fig, self.ax = plt.subplots(1, 1)
 
@@ -133,6 +149,16 @@ class VisualizationPlot(object):
         # Interval unit: ms
         self.anim = animation.FuncAnimation(self.fig, self.play,
                                             interval=0)
+
+    def play_video(self, cap_frame):
+        """
+        play the video based on currend frame
+        :param cap_frame: current frame in the video
+        """
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, cap_frame)
+        _, frame = self.cap.read()
+        cv2.imshow('frame', cv2.resize(frame, (640, 360)))
+        cv2.waitKey(1)
 
     def update_slider(self, value):
         if not self.changed_button:
@@ -197,6 +223,11 @@ class VisualizationPlot(object):
         # right cut in color: red
         # left lane change: yellow
         # right lane change: pink
+
+        # Play the video
+        if self.video_bool:
+            self.play_video(int(round(self.current_frame / self.maximum_frames * self.cap_count)))
+
         line_style = dict(color="#141310", linewidth=1, zorder=10)
         rect_style = dict(facecolor="#0b2299", fill=True, edgecolor="k", zorder=19)
         cut_in_left_style = dict(facecolor="#19e60e", fill=True, edgecolor="k", zorder=19)
