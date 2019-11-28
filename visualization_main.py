@@ -43,18 +43,18 @@ if __name__ == "__main__":
 
     play_video = True
 
-    # try:
-    if dynamic is not None and static is not None and ego is not None:
-        if play_video:
-            frame_count, cap = video(r'..\MDM data process\video\20191029_130130_3015.mp4')
-            if frame_count > 0:
-                visualization_plot = VisualizationPlot(ego, dynamic, static, play_video, frame_count, cap)
-                visualization_plot.show()
+    try:
+        if dynamic is not None and static is not None and ego is not None:
+            if play_video:
+                frame_count, cap = video(r'..\MDM data process\video\20191029_130130_3015.mp4')
+                if frame_count > 0:
+                    visualization_plot = VisualizationPlot(ego, dynamic, static, play_video, frame_count, cap)
+                    visualization_plot.show()
+                else:
+                    print('Video file damaged')
             else:
-                print('Video file damaged')
-        else:
-            visualization_plot = VisualizationPlot(ego, dynamic, static, play_video)
-            visualization_plot.show()
-    # except:
-    #     print('Something went wrong when process the raw data')
-    #     sys.exit(1)
+                visualization_plot = VisualizationPlot(ego, dynamic, static, play_video)
+                visualization_plot.show()
+    except:
+        print('Something went wrong when process the raw data')
+        sys.exit(1)

@@ -1,3 +1,7 @@
-# Add ignore rule
+# Add ignore rules
 processed_data/
 raw_data/
+.idea/
+__pycache__/
+row_data_cut/
+video/
