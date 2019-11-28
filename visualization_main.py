@@ -46,7 +46,7 @@ if __name__ == "__main__":
     try:
         if dynamic is not None and static is not None and ego is not None:
             if play_video:
-                frame_count, cap = video(r'..\MDM data process\video\20191029_130130_3015.mp4')
+                frame_count, cap = video(r'..\MDM data process\video\processed_video\output.avi')
                 if frame_count > 0:
                     visualization_plot = VisualizationPlot(ego, dynamic, static, play_video, frame_count, cap)
                     visualization_plot.show()

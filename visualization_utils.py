@@ -157,7 +157,7 @@ class VisualizationPlot(object):
         """
         self.cap.set(cv2.CAP_PROP_POS_FRAMES, cap_frame)
         _, frame = self.cap.read()
-        cv2.imshow('frame', cv2.resize(frame, (640, 360)))
+        cv2.imshow('frame', frame)
         cv2.waitKey(1)
 
     def update_slider(self, value):
