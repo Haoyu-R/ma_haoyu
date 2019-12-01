@@ -5,3 +5,4 @@ raw_data/
 __pycache__/
 row_data_cut/
 video/
+NN_data/
