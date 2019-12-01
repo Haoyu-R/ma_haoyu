@@ -219,7 +219,7 @@ def check_valid_vehicle(vehicle_speed_x_list, pos_y_list):
     pos_y_list_minus_15 = [pos_y_array < -14]
     # Check if the vehicle is in the same driving direction
     bool_array_minus_speed = [speed_array < 0]
-    return False
+
     # In valid if too many negative values in speed list or object has too many y coordinates that far away from ego
     if m < 5 * np.sum(bool_array_minus_speed) or m < 2 * np.sum(pos_y_list_minus_15) or m < 2 * np.sum(pos_y_list_plus_15):
         # print(m, np.sum(bool_array_minus_speed), np.sum(pos_y_list_minus_15), np.sum(pos_y_list_plus_15))
@@ -666,16 +666,16 @@ def cut_in_detection(ego_frames, object_frames, lane_change_array):
             right_out_flag = False
             left_out_flag = False
 
-    # 1 second after surrounding vehicle cross the line, label next 15 time frames als cut in
+    # 1 second after surrounding vehicle cross the line als cut in
     if len(cut_in_finish_right) > 0:
         right_cut_count = len(cut_in_finish_right)
         for num in cut_in_finish_right:
-            cut_in_right_dynamic[num + check_frames_num - 15:num + check_frames_num] = 1
+            cut_in_right_dynamic[num + 25] = 1
 
     if len(cut_in_finish_left) > 0:
         left_cut_count = len(cut_in_finish_left)
         for num in cut_in_finish_left:
-            cut_in_left_dynamic[num + check_frames_num - 15:num + check_frames_num] = 1
+            cut_in_left_dynamic[num + 25] = 1
 
     return left_cut_count, right_cut_count, cut_in_right_dynamic, cut_in_left_dynamic
 
@@ -738,13 +738,13 @@ def lane_change_detection(ego_df_line):
                 right_change = False
                 lane_change_right_list.append(i)
 
-    # 1 second after ego car across the line, label next 15 time frames als lane change
+    # 1 second after ego car across the line, label als lane change
     if len(lane_change_right_list) > 0:
         for i in lane_change_right_list:
-            lane_change_right_array[i + check_frames_num - 15:i + check_frames_num] = 1
+            lane_change_right_array[i + 25] = 1
     if len(lane_change_left_list) > 0:
         for i in lane_change_left_list:
-            lane_change_left_array[i + check_frames_num - 15:i + check_frames_num] = 1
+            lane_change_left_array[i + 25] = 1
     return lane_change_left_array, lane_change_right_array
 
 

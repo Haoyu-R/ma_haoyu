@@ -5,7 +5,11 @@
 from mdm_data_utils import *
 
 if __name__ == "__main__":
-    path = r'..\MDM data process\raw_data\csv'
+    # Path 1
+    # path = r'..\MDM data process\raw_data\csv'
+    # Path 2
+    path = r'..\ma_haoyu\raw_data\csv'
+
     # path = r'..\MDM data process\raw_data\csv\part-00033-49c43333-5324-4175-94e0-ddfcb4b18771-c000.csv'
     # If need to run index check
     check_valid_index = True
@@ -42,10 +46,18 @@ if __name__ == "__main__":
                     last_str_static = '_no_steering_cv_static.csv'
                     last_str_dynamic = '_no_steering_cv_dynamic.csv'
 
-            ego_df.to_csv(r"..\MDM data process\processed_data\csv\\" + str(index) + last_str_ego, index=False)
-            objects_static.to_csv(r"..\MDM data process\processed_data\csv\\" + str(index) + last_str_static,
+            # Path 1
+            # ego_df.to_csv(r"..\MDM data process\processed_data\csv\\" + str(index) + last_str_ego, index=False)
+            # objects_static.to_csv(r"..\MDM data process\processed_data\csv\\" + str(index) + last_str_static,
+            #                       index=False)
+            # objects_dynamic.to_csv(r"..\MDM data process\processed_data\csv\\" + str(index) + last_str_dynamic,
+            #                        index=False)
+
+            # Path 2
+            ego_df.to_csv(r"..\ma_haoyu\processed_data\csv\\" + str(index) + last_str_ego, index=False)
+            objects_static.to_csv(r"..\ma_haoyu\processed_data\csv\\" + str(index) + last_str_static,
                                   index=False)
-            objects_dynamic.to_csv(r"..\MDM data process\processed_data\csv\\" + str(index) + last_str_dynamic,
+            objects_dynamic.to_csv(r"..\ma_haoyu\processed_data\csv\\" + str(index) + last_str_dynamic,
                                    index=False)
         print('All csv files in the folder processed')
 
@@ -80,10 +92,18 @@ if __name__ == "__main__":
                 last_str_static = '_no_steering_cv_static.csv'
                 last_str_dynamic = '_no_steering_cv_dynamic.csv'
 
-        ego_df.to_csv(r"..\MDM data process\processed_data\csv\\" + 'one' + last_str_ego, index=False)
-        objects_static.to_csv(r"..\MDM data process\processed_data\csv\\" + 'one'+ last_str_static,
+        # Path 1
+        # ego_df.to_csv(r"..\MDM data process\processed_data\csv\\" + 'one' + last_str_ego, index=False)
+        # objects_static.to_csv(r"..\MDM data process\processed_data\csv\\" + 'one'+ last_str_static,
+        #                       index=False)
+        # objects_dynamic.to_csv(r"..\MDM data process\processed_data\csv\\" + 'one' + last_str_dynamic,
+        #                        index=False)
+
+        # Path 2
+        ego_df.to_csv(r"..\ma_haoyu\processed_data\csv\\" + 'one' + last_str_ego, index=False)
+        objects_static.to_csv(r"..\ma_haoyu\processed_data\csv\\" + 'one' + last_str_static,
                               index=False)
-        objects_dynamic.to_csv(r"..\MDM data process\processed_data\csv\\" + 'one' + last_str_dynamic,
+        objects_dynamic.to_csv(r"..\ma_haoyu\processed_data\csv\\" + 'one' + last_str_dynamic,
                                index=False)
         print('Single csv file processed')
 

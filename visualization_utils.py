@@ -18,20 +18,21 @@ def process_dynamic(dynamic_df):
     objs_dynamic = [None] * grouped_dynamic.ngroups
     current_obj = 0
     for obj_id, rows in grouped_dynamic:
-        objs_dynamic[current_obj] = {'obj_id':np.int64(obj_id)-1, # minus one to ensure the obj id is consistent with the obj id in static recording
-                             'frame':rows['frame'].values,
-                             'pos_x':rows['pos_x'].values,
-                             'pos_y':rows['pos_y'].values,
-                             'speed_x':rows['speed_x'].values,
-                             'speed_y':rows['speed_x'].values,
-                             'cut_in_left':rows['cut_in_left'].values,
-                             'cut_in_right':rows['cut_in_right'].values}
+        objs_dynamic[current_obj] = {'obj_id': np.int64(obj_id) - 1,
+                                     # minus one to ensure the obj id is consistent with the obj id in static recording
+                                     'frame': rows['frame'].values,
+                                     'pos_x': rows['pos_x'].values,
+                                     'pos_y': rows['pos_y'].values,
+                                     'speed_x': rows['speed_x'].values,
+                                     'speed_y': rows['speed_x'].values,
+                                     'cut_in_left': rows['cut_in_left'].values,
+                                     'cut_in_right': rows['cut_in_right'].values}
         current_obj += 1
     return objs_dynamic
 
 
 def obj_bounding_shape(obj_class,
-                       #length,
+                       # length,
                        width):
     """
     This file return a stable shape of objects according to its type
@@ -99,20 +100,27 @@ class VisualizationPlot(object):
         self.objs_dynamic_dict = dynamic
         self.objs_static_dict = static
         self.current_frame = 0
-        self.maximum_frames = ego.shape[0]-1
+        self.maximum_frames = ego.shape[0] - 1
         self.plotted_objects = []
         self.changed_button = False
         self.anim_running = True
         self.text = ''
         self.steering_ang = True if 'steering_ang' in self.ego_df.columns else False
         self.video_bool = video_bool
+        self.lane_change_count = 0
+        self.lane_change_left = False
+        self.lane_change_right = False
+        self.cut_in_count = 0
+        # self.cut_in_count = 0
+        # self.cut_in_left_flag = False
+        # self.cut_in_right_flag = False
         if self.video_bool:
             self.cap_count = int(cap[0])
             self.cap = cap[1]
         # Create figure and axes
         self.fig, self.ax = plt.subplots(1, 1)
 
-        self.t = self.ax.text(21, 116, self.text, bbox={'facecolor': 'wheat', 'alpha': 0.5,  'boxstyle': 'round'})
+        self.t = self.ax.text(21, 116, self.text, bbox={'facecolor': 'wheat', 'alpha': 0.5, 'boxstyle': 'round'})
         # self.fig.set_size_inches(32, 32)
         axes = plt.gca()
         # plt.axis('scaled')
@@ -244,21 +252,27 @@ class VisualizationPlot(object):
             obj_static = self.objs_static_dict[obj_id]
             initial_frame = obj_static['initial_frame']
             total_frames = obj_static['total_frames']
-            if initial_frame <= self.current_frame < initial_frame+total_frames:
-                current_frame = self.current_frame-initial_frame
+            if initial_frame <= self.current_frame < initial_frame + total_frames:
+                current_frame = self.current_frame - initial_frame
                 pos_x = obj['pos_x'][current_frame]
                 pos_y = obj['pos_y'][current_frame]
                 length = obj_static['bounding_shape'][0]
                 width = obj_static['bounding_shape'][1]
-                if obj['cut_in_left'][current_frame] == 1:
-                    rect = plt.Rectangle((-pos_y - width / 2, pos_x - length / 2), width,
-                                         length, **cut_in_left_style)
-                elif obj['cut_in_right'][current_frame] == 1:
-                    rect = plt.Rectangle((-pos_y - width / 2, pos_x - length / 2), width,
-                                         length, **cut_in_right_style)
-                else:
-                    rect = plt.Rectangle((-pos_y - width / 2, pos_x - length / 2), width,
-                                         length, **rect_style)
+
+                if obj['cut_in_left'][current_frame] == 1 or obj['cut_in_right'][current_frame] == 1:
+                    self.cut_in_count = 25
+                # if obj['cut_in_left'][current_frame] == 1:
+                #     self.cut_in_flag
+                #     rect = plt.Rectangle((-pos_y - width / 2, pos_x - length / 2), width,
+                #                          length, **cut_in_left_style)
+                # elif obj['cut_in_right'][current_frame] == 1:
+                #     rect = plt.Rectangle((-pos_y - width / 2, pos_x - length / 2), width,
+                #                          length, **cut_in_right_style)
+                # else:
+                #     rect = plt.Rectangle((-pos_y - width / 2, pos_x - length / 2), width,
+                #                          length, **rect_style)
+                rect = plt.Rectangle((-pos_y - width / 2, pos_x - length / 2), width,
+                                     length, **rect_style)
                 self.ax.add_patch(rect)
                 plotted_objects.append(rect)
 
@@ -274,18 +288,27 @@ class VisualizationPlot(object):
                 plotted_objects.append(right_line)
 
         # Add ego info window
-        self.text = self.get_ego_info(ego_current)
+        self.text = self.display_info(ego_current)
         self.t.set_text(self.text)
-
-
 
         # Add ego vehicle
         if ego_current['lane_change_left'] == 1:
+            self.lane_change_left = True
+            self.lane_change_count = 25
+        if ego_current['lane_change_right'] == 1:
+            self.lane_change_right = True
+            self.lane_change_count = 25
+
+        if self.lane_change_right and self.lane_change_count > 0:
             ego = plt.Rectangle((-1, -2), 2, 4, **line_change_left_style)
-        elif ego_current['lane_change_right'] == 1:
+            self.lane_change_count = self.lane_change_count - 1
+        elif self.lane_change_left and self.lane_change_count > 0:
             ego = plt.Rectangle((-1, -2), 2, 4, **line_change_right_style)
+            self.lane_change_count = self.lane_change_count - 1
         else:
             ego = plt.Rectangle((-1, -2), 2, 4, **ego_style)
+            self.lane_change_right = False
+            self.lane_change_left = False
         self.ax.add_patch(ego)
         plotted_objects.append(ego)
 
@@ -299,18 +322,40 @@ class VisualizationPlot(object):
             else:
                 figure_object.remove()
 
-
-    def get_ego_info(self, ego_current):
+    def display_info(self, ego_current):
         # Get the current ego info string
         speed = ego_current['speed']
         heading = ego_current['heading']
         acc_x = ego_current['acc_x']
         acc_y = ego_current['acc_y']
-        if self.steering_ang:
-            steering_ang = ego_current['steering_ang']
-            msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\nsteer_ang: {:.2f}'.format(speed, heading, acc_x, acc_y, steering_ang)
+
+        if self.cut_in_count > 0:
+            cut_in = "!!!YES!!!"
+            self.cut_in_count = self.cut_in_count - 1
+            if self.steering_ang:
+                steering_ang = ego_current['steering_ang']
+                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\nsteer_ang: {:.2f}\nCut_in: {}'.format(
+                    speed,
+                    heading,
+                    acc_x, acc_y,
+                    steering_ang, cut_in)
+            else:
+                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\nCut_in: {}'.format(speed, heading,
+                                                                                                        acc_x, acc_y,
+                                                                                                        cut_in)
         else:
-            msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}'.format(speed, heading, acc_x, acc_y)
+            if self.steering_ang:
+                steering_ang = ego_current['steering_ang']
+                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\nsteer_ang: {:.2f}'.format(
+                    speed,
+                    heading,
+                    acc_x, acc_y,
+                    steering_ang)
+            else:
+                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}'.format(speed, heading,
+                                                                                                        acc_x, acc_y)
+
+
         return msg
 
     def get_left_line(self, ego_current):
@@ -320,7 +365,7 @@ class VisualizationPlot(object):
         lin_left_y_distance = ego_current['ego_line_left_distance_y']
         lin_left_curv = ego_current['ego_line_left_curv']
 
-        lin_right_x_end = ego_current['ego_line_right_end_x'] # Make the left line and right lian has same length
+        lin_right_x_end = ego_current['ego_line_right_end_x']  # Make the left line and right lian has same length
         if lin_right_x_end > lin_left_x_end:
             lin_left_x_end = lin_right_x_end
 
@@ -342,11 +387,12 @@ class VisualizationPlot(object):
         lin_right_y_distance = ego_current['ego_line_right_distance_y']
         lin_right_curv = ego_current['ego_line_right_curv']
 
-        lin_left_x_end = ego_current['ego_line_left_end_x'] # Make the left line and right lian has same length
+        lin_left_x_end = ego_current['ego_line_left_end_x']  # Make the left line and right lian has same length
         if lin_left_x_end > lin_right_x_end:
             lin_right_x_end = lin_left_x_end
 
-        if math.isnan(lin_right_x_begin) or math.isnan(lin_right_x_end) or math.isnan(lin_right_y_distance) or math.isnan(
+        if math.isnan(lin_right_x_begin) or math.isnan(lin_right_x_end) or math.isnan(
+                lin_right_y_distance) or math.isnan(
                 lin_right_curv):
             return float('nan'), float('nan')
 
