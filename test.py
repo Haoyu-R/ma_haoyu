@@ -1,13 +1,18 @@
 import os
 import pandas as pd
 
-path = r'C:\Users\A6OJTFD\Desktop\allTraces\extractTestdala_2019_05_21_e7ce2851-e2ca-4805-b4bb-bbfeeff558b2_Data2.clf.csv'
+directory_path = r'C:\Users\A6OJTFD\Desktop\concatenate_data'
+sub_directory_path = [x[0] for x in os.walk(directory_path)]
 
-file_list = []
-for root, dirs, files in os.walk(path):
-    for file in files:
-        if file.endswith(".csv"):
-            file_list.append(os.path.join(root, file))
-
-combined_csv = pd.concat([pd.read_csv(f) for f in file_list])
-combined_csv.to_csv(r"C:\Users\A6OJTFD\Desktop\allTraces\extractTestdala_2019_05_21_e7ce2851-e2ca-4805-b4bb-bbfeeff558b2_Data2.clf.csv\combined_csv.csv", index=False, encoding='utf-8-sig')
+idx = 0
+for path in sub_directory_path[1:]:
+    print(path)
+    file_list = []
+    idx = idx + 1
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(".csv"):
+                file_list.append(os.path.join(root, file))
+                print(file)
+    combined_csv = pd.concat([pd.read_csv(f) for f in file_list], sort=False)
+    combined_csv.to_csv(r"{}\combined_{}.csv".format(directory_path, idx), index=False, encoding='utf-8-sig')
