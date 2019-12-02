@@ -56,9 +56,10 @@ def frame_count(df, check_valid_index):
     :return: index of first and last valid frame
     """
     max_frames = df.shape[0]
-
+    first_valid_index = -1
+    last_valid_index = -1
     if not check_valid_index:
-        return 0, max_frames-1
+        return 0, max_frames - 1, False
 
     speed_column = [col for col in df.columns if 'ESP_v_Signal' in col]
     line_left_column = [col for col in df.columns if 'BV1_LIN_01_EndeX' in col]
@@ -67,17 +68,21 @@ def frame_count(df, check_valid_index):
     for timestamp in range(max_frames):
         if (not math.isnan(df[speed_column[0]][timestamp])) and (
                 float(df[speed_column[0]][timestamp]) > 0.1) and not math.isnan(
-                df[line_left_column[0]][timestamp]) and not math.isnan(df[line_right_column[0]][timestamp]):
+            df[line_left_column[0]][timestamp]) and not math.isnan(df[line_right_column[0]][timestamp]):
             # set to speed > 0.1 in case some fluctuation and only valid if line info exists
             first_valid_index = timestamp
             break
     for timestamp in range(max_frames - 1, 0, -1):
         if (not math.isnan(df[speed_column[0]][timestamp])) and (
                 float(df[speed_column[0]][timestamp]) > 0.1) and not math.isnan(
-                df[line_left_column[0]][timestamp]) and not math.isnan(df[line_right_column[0]][timestamp]):
+            df[line_left_column[0]][timestamp]) and not math.isnan(df[line_right_column[0]][timestamp]):
             last_valid_index = timestamp
             break
-    return first_valid_index, last_valid_index
+
+    if first_valid_index > 0 and last_valid_index > 0:
+        return first_valid_index, last_valid_index, False
+    else:
+        return first_valid_index, last_valid_index, True
 
 
 def steering_symbol(a, b):
@@ -120,8 +125,11 @@ def new_ego_df(df, first_valid_index, last_valid_index):
         steering_df.columns = ['steering_ang',
                                'steering_ang_symbol']
         # Some values in steering ang are NAN, interpolate them
-        steering_df['steering_ang'] = steering_df['steering_ang'].interpolate(method='linear', limit_direction='both', axis=0).ffill().bfill()
-        steering_df['steering_ang_symbol'] = steering_df['steering_ang_symbol'].interpolate(method='linear', limit_direction='both', axis=0).ffill().bfill()
+        steering_df['steering_ang'] = steering_df['steering_ang'].interpolate(method='linear', limit_direction='both',
+                                                                              axis=0).ffill().bfill()
+        steering_df['steering_ang_symbol'] = steering_df['steering_ang_symbol'].interpolate(method='linear',
+                                                                                            limit_direction='both',
+                                                                                            axis=0).ffill().bfill()
         steering_ang_column = list(steering_df['steering_ang'])
         steering_ang_symbol_column = list(steering_df['steering_ang_symbol'])
 
@@ -221,7 +229,8 @@ def check_valid_vehicle(vehicle_speed_x_list, pos_y_list):
     bool_array_minus_speed = [speed_array < 0]
 
     # In valid if too many negative values in speed list or object has too many y coordinates that far away from ego
-    if m < 5 * np.sum(bool_array_minus_speed) or m < 2 * np.sum(pos_y_list_minus_15) or m < 2 * np.sum(pos_y_list_plus_15):
+    if m < 5 * np.sum(bool_array_minus_speed) or m < 2 * np.sum(pos_y_list_minus_15) or m < 2 * np.sum(
+            pos_y_list_plus_15):
         # print(m, np.sum(bool_array_minus_speed), np.sum(pos_y_list_minus_15), np.sum(pos_y_list_plus_15))
         return True
     else:
@@ -229,7 +238,7 @@ def check_valid_vehicle(vehicle_speed_x_list, pos_y_list):
 
 
 def construct_object_dict(class_list, width_list,
-                          #length_list
+                          # length_list
                           pos_x_list, pos_y_list, speed_x_list, speed_y_list,
                           index, first_valid_index, frame, count):
     """
@@ -283,14 +292,15 @@ def construct_object_dict(class_list, width_list,
                     'speed_x': speed_x_list, 'speed_y': speed_y_list}
 
     dict_static = {'obj_id': [count], 'obj_class': [class_dict[int(obj_class)]],
-                   #'length': [int(length)],
+                   # 'length': [int(length)],
                    'width': [int(width)], 'initial_frame': [initial_frame - first_valid_index],
                    'total_frames': [total_frames]}
 
     return count, pd.DataFrame(dict_dynamic), pd.DataFrame(dict_static)
 
 
-def get_object_info(df, new_data, index, slot, obj_id, first_string, second_string, count, first_valid_index, last_valid_index,
+def get_object_info(df, new_data, index, slot, obj_id, first_string, second_string, count, first_valid_index,
+                    last_valid_index,
                     minimum_frames):
     """
     trace the information of one object in all the slots
@@ -371,16 +381,20 @@ def get_object_info(df, new_data, index, slot, obj_id, first_string, second_stri
                             frame] != 0:
                     slot = new_slot
                     tmp_pos_x = \
-                        df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + positionX_str_end][frame]
+                        df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + positionX_str_end][
+                            frame]
                     pos_x_list.append(tmp_pos_x)
                     tmp_pos_y = \
-                        df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + positionY_str_end][frame]
+                        df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + positionY_str_end][
+                            frame]
                     pos_y_list.append(tmp_pos_y)
-                    tmp_class = df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + class_str_end][
-                        frame]
+                    tmp_class = \
+                        df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + class_str_end][
+                            frame]
                     class_list.append(tmp_class)
-                    tmp_width = df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + width_str_end][
-                        frame]
+                    tmp_width = \
+                        df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + width_str_end][
+                            frame]
                     width_list.append(tmp_width)
                     # tmp_length = df[first_string + str(num_new_slot) + second_string + str(num_new_slot) + '_Laenge)'][
                     #     frame]
@@ -466,7 +480,7 @@ def new_objects_df(df, first_valid_index, last_valid_index, file_number, minimum
         # Display the progress rate in console
         if index % 200 == 0:
             print('Prepossessing the {}.data: {:.2f} %'.format(str(file_number + 1), (
-                        (index - first_valid_index) / (last_valid_index - first_valid_index)) * 100))
+                    (index - first_valid_index) / (last_valid_index - first_valid_index)) * 100))
         # Loop through every slots
         for slot in range(1, 11):
             num_slot = num_to_string(slot)
@@ -484,6 +498,35 @@ def new_objects_df(df, first_valid_index, last_valid_index, file_number, minimum
                     all_objects_dynamic = all_objects_dynamic.append(object_dynamic_info, ignore_index=True)
                     all_objects_static = all_objects_static.append(object_static_info, ignore_index=True)
     return all_objects_static, all_objects_dynamic, is_SDF
+
+
+def lane_change_conflict(arr):
+    """
+    construct a line change state array which to control cut in will not be labelled later during lane change
+    :param arr:
+    :return:
+    """
+    new_arr = np.zeros((len(arr)))
+    for idx, item in enumerate(arr):
+        if item > 0:
+            first_idx = 0 if idx - 60 < 0 else idx - 60
+            last_idx = len(arr) if idx + 60 > len(arr) else idx + 60
+            new_arr[first_idx:idx] = 1
+            new_arr[idx:last_idx] = 1
+    return new_arr
+
+
+def check_valid_line(ego_frames, num):
+    if math.isnan(ego_frames['ego_line_left_begin_x'][num]) or math.isnan(
+            ego_frames['ego_line_left_end_x'][num]) or math.isnan(
+        ego_frames['ego_line_left_distance_y'][num]) or math.isnan(
+        ego_frames['ego_line_left_curv'][num]) or math.isnan(
+        ego_frames['ego_line_right_begin_x'][num]) or math.isnan(
+        ego_frames['ego_line_right_end_x'][num]) or math.isnan(
+        ego_frames['ego_line_right_distance_y'][num]) or math.isnan(ego_frames['ego_line_right_curv'][num]):
+        return False
+    else:
+        return True
 
 
 def cut_in_detection(ego_frames, object_frames, lane_change_array):
@@ -574,10 +617,32 @@ def cut_in_detection(ego_frames, object_frames, lane_change_array):
             # Counter to check if the next few frames satisfy the cut in condition
             check_frames_num = 40
             # If cut in happens during lane change, don't bother
-            if np.any(lane_change_array[num + check_frames_num - 15: num + check_frames_num]):
+            start = num - check_frames_num if num - check_frames_num > 0 else 0
+            end = num + check_frames_num if num + check_frames_num < ego_frames.shape[0] else ego_frames.shape[0]
+
+            if np.any(lane_change_array[start: end]):
                 right_out_flag = False
                 left_out_flag = False
                 continue
+
+            # Cut in will not labelled if the object stay mostly out of ego line area or the line info doesn't exist
+            # for most of time during cut in
+            # line_counter = 0
+            # for i in range(start+30, end-30):
+            #     if math.isnan(ego_frames['ego_line_left_end_x'][i]) or math.isnan(ego_frames['ego_line_right_end_x'][i]):
+            #         line_counter = line_counter + 1
+            #         continue
+            #     else:
+            #         ego_line_end = ego_frames['ego_line_left_end_x'][i] if (ego_frames['ego_line_left_end_x'][i] > ego_frames['ego_line_right_end_x'][i]) else ego_frames['ego_line_right_end_x'][i]
+            #         if ego_line_end <= object_frames['pos_x'][i]:
+            #             line_counter = line_counter + 1
+            #         else:
+            #             continue
+            # print(line_counter)
+            # if line_counter > round((end-start-60)/3):
+            #     right_out_flag = False
+            #     left_out_flag = False
+            #     continue
 
             # If object is within the ego line area,
             # first check the last 20 time frames if the object is out of ego line area at the most time
@@ -607,6 +672,13 @@ def cut_in_detection(ego_frames, object_frames, lane_change_array):
                             ego_frames['ego_line_right_curv'][num + i]):
                             line_exist += 1
                             continue
+                        else:
+                            ego_line_end = ego_frames['ego_line_left_end_x'][i] if (
+                                    ego_frames['ego_line_left_end_x'][i] > ego_frames['ego_line_right_end_x'][
+                                    i]) else ego_frames['ego_line_right_end_x'][i]
+                            if ego_line_end <= object_frames['pos_x'][i]:
+                                line_exist += 1
+                                continue
 
                         left_line_at_obj = - ego_frames['ego_line_left_distance_y'][num + i] - \
                                            ego_frames['ego_line_left_curv'][num + i] * (
@@ -634,7 +706,7 @@ def cut_in_detection(ego_frames, object_frames, lane_change_array):
                     line_exist = 0
                     for i in range(1, check_frames_num):
                         # If in the next 40 frames there are 10 frames have no line information, invalid
-                        if line_exist == 10:
+                        if line_exist > 15:
                             valid_flag = False
                             break
                         # Check if the line information consistent enough
@@ -648,6 +720,13 @@ def cut_in_detection(ego_frames, object_frames, lane_change_array):
                             ego_frames['ego_line_right_curv'][num + i]):
                             line_exist += 1
                             continue
+                        else:
+                            ego_line_end = ego_frames['ego_line_left_end_x'][num + i] if (
+                                    ego_frames['ego_line_left_end_x'][num + i] > ego_frames['ego_line_right_end_x'][
+                                    num + i]) else ego_frames['ego_line_right_end_x'][num + i]
+                            if ego_line_end <= object_frames['pos_x'][num + i]:
+                                line_exist += 1
+                                continue
 
                         left_line_at_obj = - ego_frames['ego_line_left_distance_y'][num + i] - \
                                            ego_frames['ego_line_left_curv'][num + i] * (
@@ -768,13 +847,16 @@ def label(ego_df, objects_static_df, objects_dynamic_df, file_number):
     # Get lane change label
     ego_df_line = ego_df.loc[:, ['ego_line_left_distance_y', 'ego_line_right_distance_y']]
     lane_change_left_list, lane_change_right_list = lane_change_detection(ego_df_line)
+
+    # Construct a array that show when lane change happens, later during lane change, cut in is not allow to happen
+    lane_change_array = lane_change_conflict(np.array(lane_change_left_list) + np.array(lane_change_right_list))
+
     for obj_id, obj_rows in grouped_dynamic:
         print('Cut in label the {}.data process: {:.2f}%'.format(str(file_number + 1), obj_id / obj_num * 100))
         # The first record in df start from index 0
         initial_frame = objects_static_df['initial_frame'][obj_id - 1]
         total_frames = objects_static_df['total_frames'][obj_id - 1]
-        # Construct a array that show when lane change happens, later during lane change, cut in is not allow to happen
-        lane_change_array = np.array(lane_change_left_list) + np.array(lane_change_right_list)
+
         # Unlike python slicing, here both the start and the stop are included
         ego_frames = ego_df.loc[initial_frame:initial_frame + total_frames - 1, ['ego_line_left_begin_x',
                                                                                  'ego_line_left_end_x',
@@ -788,10 +870,11 @@ def label(ego_df, objects_static_df, objects_dynamic_df, file_number):
         obj_rows.reset_index(drop=True, inplace=True)
 
         # Construct a array that show when lane change happens, later during lane change, cut in is not allow to happen
-        lane_change_array = lane_change_array[initial_frame:initial_frame + total_frames - 1]
+        lane_change_sub_array = lane_change_array[initial_frame:initial_frame + total_frames]
+
         left_cut_count, right_cut_count, cut_in_right_dynamic, cut_in_left_dynamic = cut_in_detection(ego_frames,
                                                                                                       obj_rows,
-                                                                                                      lane_change_array)
+                                                                                                      lane_change_sub_array)
         cut_in_left_count_list.append(left_cut_count)
         cut_in_right_count_list.append(right_cut_count)
         cut_in_dynamic_left_list = [*cut_in_dynamic_left_list, *cut_in_left_dynamic]

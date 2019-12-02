@@ -120,7 +120,7 @@ class VisualizationPlot(object):
         # Create figure and axes
         self.fig, self.ax = plt.subplots(1, 1)
 
-        self.t = self.ax.text(21, 116, self.text, bbox={'facecolor': 'wheat', 'alpha': 0.5, 'boxstyle': 'round'})
+        self.t = self.ax.text(21, 96, self.text, bbox={'facecolor': 'wheat', 'alpha': 0.5, 'boxstyle': 'round'})
         # self.fig.set_size_inches(32, 32)
         axes = plt.gca()
         # plt.axis('scaled')
@@ -330,17 +330,17 @@ class VisualizationPlot(object):
         acc_y = ego_current['acc_y']
 
         if self.cut_in_count > 0:
-            cut_in = "!!!YES!!!"
+            cut_in = "!!!!!CUT IN!!!!!"
             self.cut_in_count = self.cut_in_count - 1
             if self.steering_ang:
                 steering_ang = ego_current['steering_ang']
-                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\nsteer_ang: {:.2f}\nCut_in: {}'.format(
+                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\nsteer_ang: {:.2f}\n\n\n{}'.format(
                     speed,
                     heading,
                     acc_x, acc_y,
                     steering_ang, cut_in)
             else:
-                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\nCut_in: {}'.format(speed, heading,
+                msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\n\n\n{}'.format(speed, heading,
                                                                                                         acc_x, acc_y,
                                                                                                         cut_in)
         else:

@@ -1,36 +1,13 @@
-# import cv2
-# import matplotlib.pyplot as plt
-# import numpy as np
-#
-# # recognizer = cv2.face.LBPHFaceRecognizer_create()
-# filename = './20191029_130130_3015.mp4'
-# cap = cv2.VideoCapture(filename)
-#
-# frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-# width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-# height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-#
-# fig, ax = plt.subplots(1,1)
-# plt.ion()
-# plt.show()
-#
-# #Setup a dummy path
-# x = np.linspace(0,width,frames)
-# y = x/2. + 100*np.sin(2.*np.pi*x/1200)
-#
-# for i in range(frames):
-#     print(1)
-#     fig.clf()
-#     flag, frame = cap.read()
-#
-#     plt.imshow(frame)
-#     plt.plot(x,y,'k-', lw=2)
-#     plt.plot(x[i],y[i],'or')
-#
-#     if cv2.waitKey(1) == 27:
-#         break
+import os
+import pandas as pd
 
-import numpy as np
+path = r'C:\Users\A6OJTFD\Desktop\allTraces\extractTestdala_2019_05_21_e7ce2851-e2ca-4805-b4bb-bbfeeff558b2_Data2.clf.csv'
 
-Y = np.load(r'E:\Downloads\Y.npy')
-print(Y)
+file_list = []
+for root, dirs, files in os.walk(path):
+    for file in files:
+        if file.endswith(".csv"):
+            file_list.append(os.path.join(root, file))
+
+combined_csv = pd.concat([pd.read_csv(f) for f in file_list])
+combined_csv.to_csv(r"C:\Users\A6OJTFD\Desktop\allTraces\extractTestdala_2019_05_21_e7ce2851-e2ca-4805-b4bb-bbfeeff558b2_Data2.clf.csv\combined_csv.csv", index=False, encoding='utf-8-sig')
