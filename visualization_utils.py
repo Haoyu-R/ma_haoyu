@@ -341,8 +341,8 @@ class VisualizationPlot(object):
                     steering_ang, cut_in)
             else:
                 msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}\n\n\n{}'.format(speed, heading,
-                                                                                                        acc_x, acc_y,
-                                                                                                        cut_in)
+                                                                                                    acc_x, acc_y,
+                                                                                                    cut_in)
         else:
             if self.steering_ang:
                 steering_ang = ego_current['steering_ang']
@@ -353,8 +353,7 @@ class VisualizationPlot(object):
                     steering_ang)
             else:
                 msg = 'Speed: {:.2f}\nHeading: {:.2f}\nAcc_x: {:.2f}\nAcc_y: {:.2f}'.format(speed, heading,
-                                                                                                        acc_x, acc_y)
-
+                                                                                            acc_x, acc_y)
 
         return msg
 
@@ -393,7 +392,7 @@ class VisualizationPlot(object):
 
         if math.isnan(lin_right_x_begin) or math.isnan(lin_right_x_end) or math.isnan(
                 lin_right_y_distance) or math.isnan(
-                lin_right_curv):
+            lin_right_curv):
             return float('nan'), float('nan')
 
         lin_right_x = np.linspace(lin_right_x_begin, math.floor(lin_right_x_end), num=math.floor(lin_right_x_end))
