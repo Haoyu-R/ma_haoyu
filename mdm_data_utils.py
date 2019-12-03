@@ -65,6 +65,9 @@ def frame_count(df, check_valid_index):
     line_left_column = [col for col in df.columns if 'BV1_LIN_01_EndeX' in col]
     line_right_column = [col for col in df.columns if 'BV1_LIN_02_EndeX' in col]
 
+    if len(line_right_column) == 0 or len(line_left_column) == 0:
+        return 0, max_frames - 1, True, "No line information"
+
     for timestamp in range(max_frames):
         if (not math.isnan(df[speed_column[0]][timestamp])) and (
                 float(df[speed_column[0]][timestamp]) > 0.1) and not math.isnan(
@@ -72,7 +75,7 @@ def frame_count(df, check_valid_index):
             # set to speed > 0.1 in case some fluctuation and only valid if line info exists
             first_valid_index = timestamp
             break
-    for timestamp in range(max_frames - 1, 0, -1):
+    for timestamp in range(max_frames - 1, -1, -1):
         if (not math.isnan(df[speed_column[0]][timestamp])) and (
                 float(df[speed_column[0]][timestamp]) > 0.1) and not math.isnan(
             df[line_left_column[0]][timestamp]) and not math.isnan(df[line_right_column[0]][timestamp]):
@@ -82,7 +85,7 @@ def frame_count(df, check_valid_index):
     if first_valid_index > 0 and last_valid_index > 0:
         return first_valid_index, last_valid_index, False
     else:
-        return first_valid_index, last_valid_index, True
+        return first_valid_index, last_valid_index, True, "No valid movement data"
 
 
 def steering_symbol(a, b):
