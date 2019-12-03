@@ -5,6 +5,9 @@
 from mdm_data_utils import *
 
 if __name__ == "__main__":
+
+
+
     # Path 1
     path = r'..\MDM data process\raw_data\csv'
     # Path 2

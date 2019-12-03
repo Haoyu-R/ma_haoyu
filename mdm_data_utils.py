@@ -59,7 +59,7 @@ def frame_count(df, check_valid_index):
     first_valid_index = -1
     last_valid_index = -1
     if not check_valid_index:
-        return 0, max_frames - 1, False
+        return 0, max_frames - 1, False, ""
 
     speed_column = [col for col in df.columns if 'ESP_v_Signal' in col]
     line_left_column = [col for col in df.columns if 'BV1_LIN_01_EndeX' in col]
@@ -76,14 +76,16 @@ def frame_count(df, check_valid_index):
             first_valid_index = timestamp
             break
     for timestamp in range(max_frames - 1, -1, -1):
+
         if (not math.isnan(df[speed_column[0]][timestamp])) and (
                 float(df[speed_column[0]][timestamp]) > 0.1) and not math.isnan(
             df[line_left_column[0]][timestamp]) and not math.isnan(df[line_right_column[0]][timestamp]):
             last_valid_index = timestamp
             break
 
-    if first_valid_index > 0 and last_valid_index > 0:
-        return first_valid_index, last_valid_index, False
+    if first_valid_index >= 0 and last_valid_index > 0:
+        return first_valid_index, last_valid_index, False, ""
+
     else:
         return first_valid_index, last_valid_index, True, "No valid movement data"
 
@@ -134,12 +136,24 @@ def new_ego_df(df, first_valid_index, last_valid_index):
                                                                                             limit_direction='both',
                                                                                             axis=0).ffill().bfill()
         steering_ang_column = list(steering_df['steering_ang'])
-        steering_ang_symbol_column = list(steering_df['steering_ang_symbol'])
 
         # Careful, steering angle data in new e-tron data already has symbol
+        symbol_flag = True
 
-        tem_zip = zip(steering_ang_column, steering_ang_symbol_column)
-        steering_ang_column = [steering_symbol(float(a), float(b)) for a, b in tem_zip]
+        for ang in steering_ang_column:
+            if abs(ang) > 9.5:
+                steering_ang_column = [ang*0.0174533 for ang in steering_ang_column]
+                break
+
+        for ang in steering_ang_column:
+            if ang < 0:
+                symbol_flag = False
+                break
+
+        if symbol_flag:
+            steering_ang_symbol_column = list(steering_df['steering_ang_symbol'])
+            tem_zip = zip(steering_ang_column, steering_ang_symbol_column)
+            steering_ang_column = [steering_symbol(float(a), float(b)) for a, b in tem_zip]
 
     ego_line_left_begin_x_column = [col for col in df.columns if 'BV1_LIN_01_BeginnX' in col]
     ego_line_left_end_x_column = [col for col in df.columns if 'BV1_LIN_01_EndeX' in col]

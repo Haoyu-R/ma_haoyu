@@ -1,7 +1,7 @@
 from mdm_data_utils import *
 
 if __name__ == r"__main__":
-    path = r'..\concatenate_data'
+    path = r'..\concatenate_data\not_processed_1'
     csv_files_path = []
     for root, dirs, files in os.walk(path):
         for file in files:
@@ -10,8 +10,8 @@ if __name__ == r"__main__":
 
     check_valid_index = True
     for index, csv_path in enumerate(csv_files_path):
+        index = index+21
         print('Loading the {}. data...'.format(str(index + 1)))
-        print(csv_path)
         csv_df = pd.read_csv(csv_path)
         first_valid_index, last_valid_index, not_valid, error = frame_count(csv_df, check_valid_index)
         if not_valid:
