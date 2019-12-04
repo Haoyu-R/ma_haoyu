@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 
+
+# Given a path, concatenate the csv files to on in every sub directory
 directory_path = r'C:\Users\A6OJTFD\Desktop\concatenate_data'
 sub_directory_path = [x[0] for x in os.walk(directory_path)]
 

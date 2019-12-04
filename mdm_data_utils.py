@@ -142,7 +142,7 @@ def new_ego_df(df, first_valid_index, last_valid_index):
 
         for ang in steering_ang_column:
             if abs(ang) > 9.5:
-                steering_ang_column = [ang*0.0174533 for ang in steering_ang_column]
+                steering_ang_column = [ang * 0.0174533 for ang in steering_ang_column]
                 break
 
         for ang in steering_ang_column:
@@ -692,7 +692,7 @@ def cut_in_detection(ego_frames, object_frames, lane_change_array):
                         else:
                             ego_line_end = ego_frames['ego_line_left_end_x'][i] if (
                                     ego_frames['ego_line_left_end_x'][i] > ego_frames['ego_line_right_end_x'][
-                                    i]) else ego_frames['ego_line_right_end_x'][i]
+                                i]) else ego_frames['ego_line_right_end_x'][i]
                             if ego_line_end <= object_frames['pos_x'][i]:
                                 line_exist += 1
                                 continue
@@ -740,7 +740,7 @@ def cut_in_detection(ego_frames, object_frames, lane_change_array):
                         else:
                             ego_line_end = ego_frames['ego_line_left_end_x'][num + i] if (
                                     ego_frames['ego_line_left_end_x'][num + i] > ego_frames['ego_line_right_end_x'][
-                                    num + i]) else ego_frames['ego_line_right_end_x'][num + i]
+                                num + i]) else ego_frames['ego_line_right_end_x'][num + i]
                             if ego_line_end <= object_frames['pos_x'][num + i]:
                                 line_exist += 1
                                 continue
@@ -850,6 +850,7 @@ def label(ego_df, objects_static_df, objects_dynamic_df, file_number):
     :param ego_df: the whole ego time frame
     :param objects_static_df: the objects statistic time frame of ego
     :param objects_dynamic_df: the objects dynamic time frame of ego
+    :param file_number: to track how many files have been processed
     :return: ego_df: the ego time frame with lane change label columns
              objects_static_df: the objects static time frame with cut in count
              objects_dynamic_df: the objects dynamic time frame with cut in label columns

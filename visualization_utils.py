@@ -6,6 +6,36 @@ import numpy as np
 import matplotlib.animation as animation
 import pandas as pd
 import cv2
+import sys
+import os
+
+
+def read_files(path, file_name):
+    """
+    Read the ego, dynamic and static file for one recording
+    :param path: the path where three csv files saved
+    :param file_name: the prefix of current file name
+    :return: three dataframes contain ego, dynamic and static respectively
+    """
+
+    if os.path.exists(
+            r'{}\{}_dynamic.csv'.format(path, file_name)) and os.path.exists(
+        r'{}\{}_static.csv'.format(path, file_name)) and os.path.exists(
+        r'{}\{}_ego.csv'.format(path, file_name)):
+        with open(r'{}\{}_dynamic.csv'.format(path, file_name)) as tmp_dynamic:
+            dynamic_csv = pd.read_csv(tmp_dynamic)
+            print('Dynamic csv file found')
+        with open(r'{}\{}_static.csv'.format(path, file_name)) as tmp_static:
+            static_csv = pd.read_csv(tmp_static)
+            print('Static csv file found')
+        with open(r'{}\{}_ego.csv'.format(path, file_name)) as tmp_ego:
+            ego_csv = pd.read_csv(tmp_ego)
+            print('Ego csv file found')
+        return ego_csv, dynamic_csv, static_csv
+
+    else:
+        print('No available data')
+        sys.exit(0)
 
 
 def process_dynamic(dynamic_df):
