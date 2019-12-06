@@ -1,9 +1,10 @@
-import numpy as np
+import os
 
-X = np.load(r'C:\Users\arhyr\Desktop\audi\ma_haoyu\processed_data\csv\test\X.npy')
-Y = np.load(r'C:\Users\arhyr\Desktop\audi\ma_haoyu\processed_data\csv\test\Y.npy')
-normalization = np.load(r'C:\Users\arhyr\Desktop\audi\ma_haoyu\processed_data\csv\test\mean_std.npy')
-print(X[17, 0, 0])
-print(X.shape)
-print(Y.shape)
-print(normalization.shape)
+if __name__ == r"__main__":
+    path = r'..\concatenate_data\not_processed_1'
+    csv_files_path = []
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            if file.endswith(".csv"):
+                a = os.path.join(root, file)
+                print(os.path.basename(a))
