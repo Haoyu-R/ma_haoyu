@@ -16,7 +16,7 @@ def construct_label(tem_y, new_length, label_length, class_num):
     new_y = np.zeros((new_length, class_num))
     # Use one hot categories, therefore, set the first dim to one to present free driving, later if a lane change
     # happens reset to 0 in the same section
-    new_y[0, :] = 1
+    new_y[:, 0] = 1
 
     len_origin = len(tem_y)
     # Label 1s after cross the change as lane change
@@ -63,10 +63,12 @@ def construct_feature(sub_path, columns_name, window_size, new_y_length, label_l
     # Assign the lane change left and right flag
     for i in range(df.shape[0]):
         if int(df['lane_change_left'][i]) == 1:
+            print('left')
             if float(df['speed'][i]) > 80:
                 y_[i] = 1
             continue
-        if int(df['lane_change_right'][i]) == 2:
+        if int(df['lane_change_right'][i]) == 1:
+            print("right")
             if float(df['speed'][i]) > 80:
                 y_[i] = 2
 

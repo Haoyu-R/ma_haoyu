@@ -1,10 +1,6 @@
-import os
+import numpy as np
 
-if __name__ == r"__main__":
-    path = r'..\concatenate_data\not_processed_1'
-    csv_files_path = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(".csv"):
-                a = os.path.join(root, file)
-                print(os.path.basename(a))
+a = np.array([[10, 11, 12],
+       [13, 14, 15]])
+
+print(a.shape)
