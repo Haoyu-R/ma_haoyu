@@ -7,11 +7,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from sklearn.metrics import classification_report
-from sklearn.preprocessing import OneHotEncoder
-from keras.wrappers.scikit_learn import KerasRegressor, KerasClassifier
-import eli5
-from eli5.sklearn import PermutationImportance
-
+from keras.models import load_model
+import random
+from keras.losses import CategoricalCrossentropy
 
 # Deactivate the GPU
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
@@ -28,9 +26,9 @@ def lane_change_model(filters_=64, kernel_size_=7, strides_=2, input_shape_=(500
     model.add(Dropout(0.5))
     model.add(BatchNormalization())
     model.add(GRU(128, return_sequences=True))
-    model.add(Dropout(0.5))
-    model.add(BatchNormalization())
-    model.add(Dropout(0.5))
+    # model.add(Dropout(0.5))
+    # model.add(BatchNormalization())
+    # model.add(Dropout(0.5))
     model.add(TimeDistributed(Dense(3, activation='softmax')))
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
     return model
@@ -41,16 +39,16 @@ tf.keras.backend.clear_session()
 
 
 # Some hyper-parameters
-epochs = 2
+epochs = 200
 batch_size = 64
 filters = 64
 kernel_size = 7
 strides = 2
 input_shape = (500, 4)
 validation_split = 0.3
-
-X = np.load(r'..\preprocessed_data\test_with_steering_angle\X.npy')
-Y = np.load(r'..\preprocessed_data\test_with_steering_angle\Y.npy')
+#
+X = np.load(r'NN_data\X.npy')
+Y = np.load(r'NN_data\Y.npy')
 
 # Split the data into train and validation set
 portion = int(X.shape[0]*validation_split)
@@ -58,23 +56,74 @@ X_validation = X[:portion, :, :]
 Y_validation = Y[:portion, :, :]
 X_train = X[portion:, :, :]
 Y_train = Y[portion:, :, :]
-print("Train on {} samples".format(X.shape[0]-portion))
-print("Validate on {} samples".format(portion))
+# print("Train on {} samples".format(X.shape[0]-portion))
+# print("Validate on {} samples".format(portion))
+#
+# model = lane_change_model()
+#
+# model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
+# model.fit(X_train, Y_train, epochs=epochs, verbose=2, validation_data=(X_validation, Y_validation))
 
-model = lane_change_model()
+# model.save(r'NN_data\my_model.h5')
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
-history = model.fit(X_train, Y_train, validation_data=(X_validation, Y_validation), epochs=epochs, verbose=2)
+# # Feature selection
+trained_model = load_model(r'NN_data\my_model.h5')
 
-# Feature selection
-# feature_model = KerasRegressor(build_fn=lane_change_model)
-# feature_model.fit(X_train, Y_train)
-# Y_validation = Y_validation.reshape((Y_validation.shape[0]*Y_validation.shape[1], 3))
-# Y_valid_bool = np.argmax(Y_validation, axis=1)
-# X_validation = X_validation.reshape((X_validation.shape[0]*X_validation.shape[1], 4))
+# Reshape predicted Y to dim (timesteps*m, feature_dims)
+Y_valid_pred = trained_model.predict(X_validation, verbose=2)
+Y_valid_pred_temp = Y_valid_pred.reshape((Y_valid_pred.shape[0]*Y_valid_pred.shape[1], 3))
+Y_valid_pred_bool = np.argmax(Y_valid_pred_temp, axis=1)
 
+# Reshape real Y to dim
+Y_validation_temp = Y_validation.reshape((Y_validation.shape[0]*Y_validation.shape[1], 3))
+Y_valid_bool = np.argmax(Y_validation_temp, axis=1)
 
-# perm = PermutationImportance(model , random_state=1, scoring="accuracy").fit(X_validation, Y_valid_bool)
-# eli5.show_weights(perm, feature_names = X.columns.tolist())
+# Calculate benchmark of error
+cee = CategoricalCrossentropy()
+categorical_err_benchmark = cee(Y_valid_pred, Y_validation).numpy()
+print("categorical_crossentropy_benchmark: {:.2f}".format(categorical_err_benchmark))
+err_dict_benchmark = classification_report(Y_valid_bool, Y_valid_pred_bool, output_dict=True)
+# print(error_dict)
+f1_benchmark = float(err_dict_benchmark['2']['f1-score']) + float(err_dict_benchmark['1']['f1-score'])
+print("f1_score_benchmark: {:.2f}".format(f1_benchmark))
 
+# Reshape to dims (X_validation.shape[0]*X_validation.shape[1], X_validation.shape[2]) to make shuffle easier
+X_reversed = X_validation.reshape(X_validation.shape[0]*X_validation.shape[1], X_validation.shape[2])
 
+name_list = ['speed', 'acc_x', 'acc_y', 'steering_ang']
+err_list = []
+f1_list = []
+for i in range(X_reversed.shape[1]):
+
+    X_reversed_temp = X_reversed
+    # Shuffle the selected feature column
+    feature_column = X_reversed_temp[:, i]
+    # Shuffle index
+    p = np.random.permutation(X_reversed.shape[0])
+    # Inverted shuffle index
+    s = np.empty(p.size, dtype=np.int32)
+    for j in np.arange(p.size):
+        s[p[j]] = j
+
+    X_reversed_temp[:, i] = feature_column[p]
+    # Reshape to same dim as input for NN model
+    X_permuted = X_reversed_temp.reshape(X_validation.shape[0], X_validation.shape[1], X_validation.shape[2])
+    Y_permuted = trained_model.predict(X_permuted, verbose=2)
+
+    # Restore the X
+    X_reversed_temp[:, i] = feature_column[s]
+    # Calculate relative categorical crossentropy
+    categorical_err = cee(Y_permuted, Y_validation).numpy()
+    err_list.append(categorical_err/categorical_err_benchmark)
+
+    # Reshape to calculate f1 score
+    Y_permuted = Y_permuted.reshape((Y_permuted.shape[0] * Y_permuted.shape[1], 3))
+    Y_permuted_bool = np.argmax(Y_permuted, axis=1)
+    error_dict = classification_report(Y_valid_bool, Y_permuted_bool, output_dict=True, zero_division=0)
+    f1 = float(error_dict['2']['f1-score']) + float(error_dict['1']['f1-score'])
+    f1_list.append(f1)
+
+# print("Categorical_crossentropy benchmark: {},  f1_score benchmark: {}".format(f1_benchmark, f1_benchmark))
+
+for idx, item in enumerate(name_list):
+    print("\"" + item + "\" has permutation importance {:.2f} and f1_score {:.2f}".format(err_list[idx], f1_list[idx]))
