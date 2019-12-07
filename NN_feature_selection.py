@@ -81,11 +81,11 @@ Y_valid_bool = np.argmax(Y_validation_temp, axis=1)
 # Calculate benchmark of error
 cee = CategoricalCrossentropy()
 categorical_err_benchmark = cee(Y_valid_pred, Y_validation).numpy()
-print("categorical_crossentropy_benchmark: {:.2f}".format(categorical_err_benchmark))
+# print("categorical_crossentropy_benchmark: {:.2f}".format(categorical_err_benchmark))
 err_dict_benchmark = classification_report(Y_valid_bool, Y_valid_pred_bool, output_dict=True)
 # print(error_dict)
-f1_benchmark = float(err_dict_benchmark['2']['f1-score']) + float(err_dict_benchmark['1']['f1-score'])
-print("f1_score_benchmark: {:.2f}".format(f1_benchmark))
+f1_benchmark = (float(err_dict_benchmark['0']['f1-score']), float(err_dict_benchmark['1']['f1-score']), float(err_dict_benchmark['2']['f1-score']))
+print("f1_score_benchmark: (free driving-{:.2f})  (left lane change-{:.2f})  (right lane change-{:.2f})".format(f1_benchmark[0], f1_benchmark[1], f1_benchmark[2])+'\n')
 
 # Reshape to dims (X_validation.shape[0]*X_validation.shape[1], X_validation.shape[2]) to make shuffle easier
 X_reversed = X_validation.reshape(X_validation.shape[0]*X_validation.shape[1], X_validation.shape[2])
@@ -120,10 +120,14 @@ for i in range(X_reversed.shape[1]):
     Y_permuted = Y_permuted.reshape((Y_permuted.shape[0] * Y_permuted.shape[1], 3))
     Y_permuted_bool = np.argmax(Y_permuted, axis=1)
     error_dict = classification_report(Y_valid_bool, Y_permuted_bool, output_dict=True, zero_division=0)
-    f1 = float(error_dict['2']['f1-score']) + float(error_dict['1']['f1-score'])
+    f1 = (float(error_dict['0']['f1-score']), float(error_dict['1']['f1-score']), float(error_dict['2']['f1-score']))
     f1_list.append(f1)
 
 # print("Categorical_crossentropy benchmark: {},  f1_score benchmark: {}".format(f1_benchmark, f1_benchmark))
 
 for idx, item in enumerate(name_list):
-    print("\"" + item + "\" has permutation importance {:.2f} and f1_score {:.2f}".format(err_list[idx], f1_list[idx]))
+    print("\"" + item + ":\"")
+    print("Importance score: {:.2f}".format(err_list[idx]))
+    f1_benchmark = f1_list[idx]
+    print("f1_score: (free driving-{:.2f})  (left lane change-{:.2f})  (right lane change-{:.2f})".format(
+        f1_benchmark[0], f1_benchmark[1], f1_benchmark[2])+'\n')
