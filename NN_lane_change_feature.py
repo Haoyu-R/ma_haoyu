@@ -30,9 +30,11 @@ if __name__ == "__main__":
     Y_list = []
 
     for sub_path in file_list:
-        x, y = construct_feature(sub_path, columns_name, window_size, new_y_length, label_length, min_size_scenarios, class_num)
-        X_list.append(x)
-        Y_list.append(y)
+        print(sub_path)
+        x, y, exist_flag = construct_feature(sub_path, columns_name, window_size, new_y_length, label_length, min_size_scenarios, class_num)
+        if exist_flag:
+            X_list.append(x)
+            Y_list.append(y)
 
     X = np.concatenate([x for x in X_list], axis=0)
     Y = np.concatenate([y for y in Y_list], axis=0)

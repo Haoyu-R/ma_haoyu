@@ -15,23 +15,23 @@ from keras.losses import CategoricalCrossentropy
 os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 
 
-def lane_change_model(filters_=64, kernel_size_=7, strides_=2, input_shape_=(500, 4)):
-
-    model = Sequential()
-    model.add(Conv1D(filters=filters_, kernel_size=kernel_size_, strides=strides_, input_shape=input_shape_))
-    model.add(BatchNormalization())
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(GRU(128, return_sequences=True))
-    model.add(Dropout(0.5))
-    model.add(BatchNormalization())
-    model.add(GRU(128, return_sequences=True))
-    # model.add(Dropout(0.5))
-    # model.add(BatchNormalization())
-    # model.add(Dropout(0.5))
-    model.add(TimeDistributed(Dense(3, activation='softmax')))
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
-    return model
+# def lane_change_model(filters_=64, kernel_size_=7, strides_=2, input_shape_=(500, 4)):
+#
+#     model = Sequential()
+#     model.add(Conv1D(filters=filters_, kernel_size=kernel_size_, strides=strides_, input_shape=input_shape_))
+#     model.add(BatchNormalization())
+#     model.add(Activation('relu'))
+#     model.add(Dropout(0.5))
+#     model.add(GRU(128, return_sequences=True))
+#     model.add(Dropout(0.5))
+#     model.add(BatchNormalization())
+#     model.add(GRU(128, return_sequences=True))
+#     # model.add(Dropout(0.5))
+#     # model.add(BatchNormalization())
+#     # model.add(Dropout(0.5))
+#     model.add(TimeDistributed(Dense(3, activation='softmax')))
+#     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
+#     return model
 
 
 # Clear back sessions

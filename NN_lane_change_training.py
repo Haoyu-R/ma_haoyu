@@ -6,6 +6,7 @@ from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import pandas as pd
 from sklearn.metrics import classification_report
 
 
@@ -26,19 +27,22 @@ tf.keras.backend.clear_session()
 
 
 # Some hyper-parameters
-epochs = 500
+epochs = 5
 batch_size = 64
 filters = 64
 kernel_size = 7
 strides = 2
-input_shape = (500, 4)
-validation_split = 0.3
+input_shape = (None, 4)
+validation_split = 0.2
+num_4_name = 2
+path = r"..\preprocessed_data\test_with_steering_angle"
 
 # Used to select the best learning rate
 # lr_schedule = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-8 * 10 ** (epoch/20))
 
-X = np.load(r'..\preprocessed_data\test_with_steering_angle\X.npy')
-Y = np.load(r'..\preprocessed_data\test_with_steering_angle\Y.npy')
+# Load the data
+X = np.load(r'{}\X.npy'.format(path))
+Y = np.load(r'{}\Y.npy'.format(path))
 
 # Split the data into train and validation set
 portion = int(X.shape[0]*validation_split)
@@ -46,8 +50,8 @@ X_validation = X[:portion, :, :]
 Y_validation = Y[:portion, :, :]
 X_train = X[portion:, :, :]
 Y_train = Y[portion:, :, :]
-print("Train on {} samples".format(X.shape[0]-portion))
-print("Validate on {} samples".format(portion))
+# print("Train on {} samples".format(X.shape[0]-portion))
+# print("Validate on {} samples".format(portion))
 
 model = Sequential([
     Conv1D(filters=filters, kernel_size=kernel_size, strides=strides, input_shape=input_shape),
@@ -58,6 +62,9 @@ model = Sequential([
     Dropout(0.5),
     BatchNormalization(),
     GRU(128, return_sequences=True),
+    Dropout(0.5),
+    BatchNormalization(),
+    Dropout(0.5),
     TimeDistributed(Dense(3, activation='softmax'))
 ])
 
@@ -72,6 +79,8 @@ history = model.fit(X_train, Y_train, validation_data=(X_validation, Y_validatio
 # plt.semilogx(lrs, history.history['loss'])
 # plt.show()
 
+# Save the NN model
+model.save(r'{}\model_all_none_{}.h5'.format(path, num_4_name))
 
 # Reshape Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = model.predict(X_validation, verbose=2)
@@ -91,7 +100,7 @@ plt.plot(history.history['val_acc'])
 plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
+plt.legend(['train', 'test'], loc='upper right')
 
 # Plot history for loss
 plt.subplot(2, 1, 2)
@@ -100,35 +109,17 @@ plt.plot(history.history['val_loss'])
 plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
-plt.legend(['train', 'test'], loc='upper left')
-plt.show()
+plt.legend(['train', 'test'], loc='upper right')
+plt.tight_layout()
+# Save the training history picture
+plt.savefig(r"{}\training_loss_acc".format(path))
+# plt.show()
 
-# Following visualize the label in on sample
-y_test = model.predict(np.expand_dims(X[0, :, :], axis=0))
-plt.subplot(2, 3, 1)
-plt.plot(y_test[0, :, 0])
-plt.title('Free driving label - Predicted ')
 
-plt.subplot(2, 3, 2)
-plt.plot(y_test[0, :, 1])
-plt.title('Left lane change label - Predicted ')
+# Save the history dict
+hist_df = pd.DataFrame(history.history)
+hist_csv_file = r'{}\history_{}.csv'.format(path, num_4_name)
+with open(hist_csv_file, mode='w') as f:
+    hist_df.to_csv(f)
 
-plt.subplot(2, 3, 3)
-plt.plot(y_test[0, :, 2])
-plt.title('Right lane change label - Predicted ')
-
-plt.subplot(2, 3, 4)
-plt.plot(Y[0, :, 0])
-plt.title('Free driving label - Real')
-
-plt.subplot(2, 3, 5)
-plt.plot(Y[0, :, 1])
-plt.title('Left lane change label - Real')
-
-plt.subplot(2, 3, 6)
-plt.plot(Y[0, :, 2])
-plt.title('Right lane change label - Real')
-plt.show()
-
-# Save the NN model
-# model.save(r'..\preprocessed_data\test_with_steering_angle\my_model.h5')
+# os.system("shutdown /s /t 1")

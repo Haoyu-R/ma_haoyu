@@ -63,12 +63,10 @@ def construct_feature(sub_path, columns_name, window_size, new_y_length, label_l
     # Assign the lane change left and right flag
     for i in range(df.shape[0]):
         if int(df['lane_change_left'][i]) == 1:
-            print('left')
             if float(df['speed'][i]) > 80:
                 y_[i] = 1
             continue
         if int(df['lane_change_right'][i]) == 1:
-            print("right")
             if float(df['speed'][i]) > 80:
                 y_[i] = 2
 
@@ -80,24 +78,41 @@ def construct_feature(sub_path, columns_name, window_size, new_y_length, label_l
         if item != 0:
             # Random a number to cut the lane change section
             r = random.randint(0, window_size - min_size_scenarios + 1)
+            # Prevent exceed range
+            if r+idx >= df.shape[0]-1 or idx + r - window_size < 0:
+                continue
             temp_x = df[columns_name][idx + r - window_size:idx + r]
             temp_y = y_[idx + r - window_size:idx + r]
+            if len(temp_y) == 0:
+                print(idx)
+                print(len(temp_x))
+                continue
             temp_y = construct_label(temp_y, new_y_length, label_length, class_num)
             x.append(temp_x)
             y.append(temp_y)
+
             # Do this twice to synthetic more data
             r = random.randint(0, window_size - min_size_scenarios + 1)
+            if r+idx >= df.shape[0]-1 or idx + r - window_size < 0:
+                continue
             temp_x = df[columns_name][idx + r - window_size:idx + r]
             temp_y = y_[idx + r - window_size:idx + r]
+            if len(temp_y) == 0:
+                print(idx)
+                print(len(temp_x))
+                continue
             temp_y = construct_label(temp_y, new_y_length, label_length, class_num)
             x.append(temp_x)
             y.append(temp_y)
 
     # Concatenate all the examples from lists
-    examples = np.concatenate([i for i in x], axis=0)
-    labels = np.concatenate([i for i in y], axis=0)
+    if len(x) == 0:
+        return -1, -1, False
+    else:
+        examples = np.concatenate([i for i in x], axis=0)
+        labels = np.concatenate([i for i in y], axis=0)
 
-    return examples, labels
+        return examples, labels, True
 
 
 def normalization(data):

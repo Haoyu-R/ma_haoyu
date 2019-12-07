@@ -8,10 +8,12 @@ if __name__ == r"__main__":
             if file.endswith(".csv"):
                 csv_files_path.append(os.path.join(root, file))
 
+
     check_valid_index = True
     for index, csv_path in enumerate(csv_files_path):
-        print(csv_path)
         index = index + 31
+        print(csv_path)
+
         print('Loading the {}. data...'.format(str(index + 1)))
         csv_df = pd.read_csv(csv_path)
         first_valid_index, last_valid_index, not_valid, error = frame_count(csv_df, check_valid_index)
