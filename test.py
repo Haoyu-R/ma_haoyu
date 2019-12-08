@@ -1,12 +1,10 @@
 import numpy as np
 import random
+import pandas as pd
+import matplotlib.pyplot as plt
+import math
 
-a = np.array([[10, 11, 12],
-       [13, 14, 15]])
-np.random.permutation(a)
-print(a)
-print(np.random.permutation(a))
+for i in range(600):
+    if i > 300:
+        print(float(0.001 * math.exp(0.1 * int(300 - i))))
 
-# b = a[1,:]
-# random.shuffle(b)
-# a[1,:] = b

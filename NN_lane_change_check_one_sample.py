@@ -27,10 +27,10 @@ Y = np.load(r'..\preprocessed_data\test_with_steering_angle\Y.npy')
 # X = np.load(r'NN_data\X.npy')
 # Y = np.load(r'NN_data\Y.npy')
 
-trained_model = load_model(r'NN_data\model_all_none_1.h5')
-num = 810
+trained_model = load_model(r'NN_data\model_all_2.h5')
+num = 0
 # Following visualize the label in on sample
-y_test = trained_model.predict(np.expand_dims(X[num, :400, :], axis=0))
+y_test = trained_model.predict(np.expand_dims(X[num, :, :], axis=0))
 
 fig = plt.figure()
 

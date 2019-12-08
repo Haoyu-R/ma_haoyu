@@ -12,41 +12,15 @@ import random
 from keras.losses import CategoricalCrossentropy
 
 # Deactivate the GPU
-os.environ["CUDA_VISIBLE_DEVICES"]="-1"
-
-
-# def lane_change_model(filters_=64, kernel_size_=7, strides_=2, input_shape_=(500, 4)):
-#
-#     model = Sequential()
-#     model.add(Conv1D(filters=filters_, kernel_size=kernel_size_, strides=strides_, input_shape=input_shape_))
-#     model.add(BatchNormalization())
-#     model.add(Activation('relu'))
-#     model.add(Dropout(0.5))
-#     model.add(GRU(128, return_sequences=True))
-#     model.add(Dropout(0.5))
-#     model.add(BatchNormalization())
-#     model.add(GRU(128, return_sequences=True))
-#     # model.add(Dropout(0.5))
-#     # model.add(BatchNormalization())
-#     # model.add(Dropout(0.5))
-#     model.add(TimeDistributed(Dense(3, activation='softmax')))
-#     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
-#     return model
-
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Clear back sessions
 tf.keras.backend.clear_session()
 
 
 # Some hyper-parameters
-epochs = 200
-batch_size = 64
-filters = 64
-kernel_size = 7
-strides = 2
-input_shape = (500, 4)
-validation_split = 0.3
-#
+validation_split = 0.1
+
 X = np.load(r'NN_data\X.npy')
 Y = np.load(r'NN_data\Y.npy')
 
@@ -67,7 +41,7 @@ Y_train = Y[portion:, :, :]
 # model.save(r'NN_data\my_model.h5')
 
 # # Feature selection
-trained_model = load_model(r'NN_data\my_model.h5')
+trained_model = load_model(r'NN_data\model_all_2.h5')
 
 # Reshape predicted Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = trained_model.predict(X_validation, verbose=2)

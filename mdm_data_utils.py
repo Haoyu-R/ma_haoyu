@@ -142,7 +142,7 @@ def new_ego_df(df, first_valid_index, last_valid_index):
         a = np.absolute(steering_ang_column)
         print(np.max(a))
         for ang in steering_ang_column:
-            if abs(ang) > 15:
+            if abs(ang) > 14:
                 steering_ang_column = [ang * 0.0174533 for ang in steering_ang_column]
                 break
 
