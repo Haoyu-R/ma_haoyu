@@ -800,7 +800,7 @@ def lane_change_detection(ego_df_line):
         if i % 200 == 0:
             print('Lane change label process {0:.2f}%'.format(i / m * 100))
         # If the ego vehicle touch the line, start to monitor
-        if ego_df_line['ego_line_left_distance_y'][i] < 0:
+        if ego_df_line['ego_line_left_distance_y'][i] < 0 and not right_change:
             left_change = True
             right_change = False
         # Monitor process
@@ -814,7 +814,7 @@ def lane_change_detection(ego_df_line):
                 right_change = False
                 continue
             # Lane change condition, count > 5 is to prevent noise
-            if count > 5 and ego_df_line['ego_line_left_distance_y'][i] > 2.7:
+            if count > 5 and ego_df_line['ego_line_left_distance_y'][i] > 2.5:
                 count = 0
                 left_change = False
                 right_change = False
@@ -830,7 +830,8 @@ def lane_change_detection(ego_df_line):
                 count = 0
                 left_change = False
                 right_change = False
-            if count > 5 and ego_df_line['ego_line_right_distance_y'][i] < -2.7:
+            if count > 5 and ego_df_line['ego_line_right_distance_y'][i] < -2.5:
+                count = 0
                 left_change = False
                 right_change = False
                 lane_change_right_list.append(i)

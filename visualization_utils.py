@@ -193,7 +193,8 @@ class VisualizationPlot(object):
         play the video based on currend frame
         :param cap_frame: current frame in the video
         """
-        self.cap.set(cv2.CAP_PROP_POS_FRAMES, cap_frame)
+        # Plus 35 to synchronize video and recording
+        self.cap.set(cv2.CAP_PROP_POS_FRAMES, cap_frame+30)
         _, frame = self.cap.read()
         cv2.imshow('frame', frame)
         cv2.waitKey(1)

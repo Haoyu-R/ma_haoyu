@@ -7,10 +7,10 @@ from mdm_data_utils import *
 if __name__ == "__main__":
 
     # Path of raw data and path for saving of new data
-    # read_path = r'..\MDM data process\raw_data\csv'
-    # save_path = r"..\MDM data process\processed_data\csv\\"
-    read_path = r'..\ma_haoyu\raw_data\csv'
-    save_path = r"..\ma_haoyu\processed_data\csv\\"
+    read_path = r'..\MDM data process\raw_data\csv'
+    save_path = r"..\MDM data process\processed_data\csv\second\\"
+    # read_path = r'..\ma_haoyu\raw_data\csv'
+    # save_path = r"..\ma_haoyu\processed_data\csv\\"
 
     # If need to run index check, be careful if want to synchronize with video, do not set to True
     check_valid_index = False

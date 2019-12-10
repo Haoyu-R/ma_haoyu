@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, TimeDistributed, Conv1D, GRU, BatchNormalization, Activation
+from keras.layers import Dense, Dropout, TimeDistributed, Conv1D, GRU, BatchNormalization, Activation, LSTM
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,9 +13,10 @@ from sklearn.metrics import classification_report
 from keras.callbacks import TensorBoard
 
 # Deactivate the GPU
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
+# Learning rate scheduler
 def lr_schedule(epoch):
     if epoch < 5:
         return 0.1
@@ -34,7 +35,7 @@ def lr_schedule(epoch):
 # Callback to early stop training
 class Callback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, logs={}):
-        if logs.get('loss') < 0.4:
+        if logs.get('acc') > 0.985:
             print("Loss achieved, so cancel the progress")
             self.model.stop_training = True
 
@@ -43,14 +44,14 @@ class Callback(tf.keras.callbacks.Callback):
 tf.keras.backend.clear_session()
 
 # Some hyper-parameters
-epochs = 1000
+epochs = 500
 batch_size = 64
 filters = 64
 kernel_size = 7
 strides = 2
 input_shape = (None, 4)
-validation_split = 0.15
-num_4_name = 3
+validation_split = 0.10
+num_4_name = 7
 learning_rate = 1e-1
 path = r"..\preprocessed_data\test_with_steering_angle"
 
@@ -75,10 +76,10 @@ model = Sequential([
     BatchNormalization(),
     Activation('relu'),
     Dropout(0.5),
-    GRU(128, return_sequences=True),
+    LSTM(128, return_sequences=True),
     Dropout(0.5),
     BatchNormalization(),
-    GRU(128, return_sequences=True),
+    LSTM(128, return_sequences=True),
     Dropout(0.5),
     BatchNormalization(),
     Dropout(0.5),
@@ -93,10 +94,11 @@ model.compile(optimizer="adam", loss='categorical_crossentropy', metrics=['acc']
 
 log_dir = "logs\\fit{}\\".format(num_4_name) + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
+acc_callback = Callback()
 
 lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lr_schedule)
 
-history = model.fit(X_train, Y_train, validation_data=(X_validation, Y_validation), epochs=epochs, verbose=2, callbacks=[tensorboard_callback, lr_scheduler])
+history = model.fit(X_train, Y_train, validation_data=(X_validation, Y_validation), epochs=epochs, verbose=2, callbacks=[tensorboard_callback, acc_callback])
 
 # Used to find best learning rate
 # lrs = learning_rate * (10 ** (np.arange(epochs)/20))

@@ -4,7 +4,7 @@ from NN_preprocess_utils import *
 
 if __name__ == "__main__":
 
-    path = r'..\preprocessed_data\test_with_steering_angle'
+    path = r'..\preprocessed_data'
     # Walk through every ego data
     file_list = []
     for root, dirs, files in os.walk(path):
@@ -19,10 +19,10 @@ if __name__ == "__main__":
     # Number of frames to be as lane change label after one lane change
     label_length = 25
     # Which features do you want
-    columns_name = ['speed', 'acc_x', 'acc_y', 'steering_ang']
+    #columns_name = ['speed', 'acc_x', 'acc_y', 'steering_ang']
     # How many classes
     class_num = 3
-    # columns_name = ['speed', 'acc_x', 'acc_y']
+    columns_name = ['speed', 'acc_x', 'acc_y']
     # New label length: calculation based on Conv1D layer with kernel_size=7 and stride=1
     new_y_length = int((window_size-7)/2) + 1
 
@@ -50,8 +50,8 @@ if __name__ == "__main__":
 
     mean_std = np.reshape(np.concatenate((mean, std), axis=0), (2, len(columns_name)))
 
-    np.save('{}\\X.npy'.format(path), X)
-    np.save('{}\\Y.npy'.format(path), Y)
-    np.save('{}\\mean_std.npy'.format(path), mean_std)
+    np.save('{}\\X_without_steering_ang.npy'.format(path), X)
+    np.save('{}\\Y_without_steering_ang.npy'.format(path), Y)
+    np.save('{}\\mean_std_without_steering_ang.npy'.format(path), mean_std)
 
 

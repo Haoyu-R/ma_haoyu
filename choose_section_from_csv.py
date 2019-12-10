@@ -59,12 +59,12 @@ if __name__ == '__main__':
     path = r'C:\Users\A6OJTFD\Desktop\MDM data process\row_data_cut\Trace_e-tron_10_29.csv'
     start_day = 29
     start_hour = 13
-    start_min = 1
-    start_second = 30
+    start_min = 32
+    start_second = 9
     end_day = 29
-    end_hour = 13
-    end_min = 31
-    end_second = 45
+    end_hour = 14
+    end_min = 15
+    end_second = 24
 
     if os.path.isfile(path):
         dir_name = os.path.dirname(path)

@@ -26,9 +26,9 @@ Y = np.load(r'NN_data\Y.npy')
 
 # Split the data into train and validation set
 portion = int(X.shape[0]*validation_split)
-X_validation = X[:portion, :, :]
+X_validation = X[:portion, :, 1:]
 Y_validation = Y[:portion, :, :]
-X_train = X[portion:, :, :]
+X_train = X[portion:, :, 1:]
 Y_train = Y[portion:, :, :]
 # print("Train on {} samples".format(X.shape[0]-portion))
 # print("Validate on {} samples".format(portion))
@@ -41,7 +41,7 @@ Y_train = Y[portion:, :, :]
 # model.save(r'NN_data\my_model.h5')
 
 # # Feature selection
-trained_model = load_model(r'NN_data\model_all_2.h5')
+trained_model = load_model(r'NN_data\model_without_steering_ang_6.h5')
 
 # Reshape predicted Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = trained_model.predict(X_validation, verbose=2)
