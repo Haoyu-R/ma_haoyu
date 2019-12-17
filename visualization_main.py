@@ -9,16 +9,17 @@ if __name__ == "__main__":
 
     # video_path = r'..\MDM data process\video\processed_video\20191029_130130_3015.avi'
     # csv_path = r'..\MDM data process\processed_data\csv\first'
-    # video_path = r'..\MDM data process\video\processed_video\20191029_133209_4315.avi'
-    # csv_path = r'..\MDM data process\processed_data\csv\second'
-    file_prefix = r'0_cv'
-    video_path = r'..\ma_haoyu\processed_video\20191029_130130_3015.avi'
-    csv_path = r'..\ma_haoyu\processed_data\csv'
+    video_path = r'..\MDM data process\video\processed_video\20191029_133209_4315.avi'
+    csv_path = r'..\MDM data process\processed_data\csv\test'
+    # csv_path = r'..\MDM data process\processed_data\csv\test'
+    file_prefix = r'20_no_steering_sdf'
+    # video_path = r'..\ma_haoyu\processed_video\20191029_130130_3015.avi'
+    # csv_path = r'..\ma_haoyu\processed_data\csv'
     ego, dynamic_raw, static_raw = read_files(csv_path, file_prefix)
     dynamic = process_dynamic(dynamic_raw)
     static = process_static(static_raw)
 
-    play_video = True
+    play_video = False
 
     try:
         if dynamic is not None and static is not None and ego is not None:

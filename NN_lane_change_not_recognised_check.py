@@ -7,16 +7,16 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
 if __name__ == "__main__":
-
-    path = r'processed_data\csv\0_cv_ego_test.csv'
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+    path = r'processed_data\csv\first\0_cv_ego.csv'
     # Walk through every ego data
 
     # Depend on number of features and length of each example
-    start_frame = 18500
-    window_size = 500
+    start_frame = 10000
+    window_size = 10000
 
-    columns_name = ['speed', 'acc_x', 'acc_y', 'steering_ang']
-    trained_model = load_model(r'NN_data\my_model.h5')
+    columns_name = ['speed', 'acc_x', 'acc_y']
+    trained_model = load_model(r'NN_data\model_12_without_steering_LSTM_bi.h5')
 
     # columns_name = ['speed', 'acc_x', 'acc_y']
     # trained_model = load_model(r'NN_data\model_without_steering_ang_6.h5')
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     sample = df[columns_name][start_frame:start_frame+window_size]
 
     # normalized_sample = (sample - mean_and_variance[0, :-1])/mean_and_variance[1, :-1]
-    normalized_sample = (sample - mean_and_variance[0, :]) / mean_and_variance[1, :]
+    normalized_sample = (sample - mean_and_variance[0, :-1]) / mean_and_variance[1, :-1]
 
 
     # Following visualize the label in on sample

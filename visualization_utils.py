@@ -224,7 +224,7 @@ class VisualizationPlot(object):
             print("There are no frames available with an index higher than {}.".format(self.maximum_frames))
 
     def update_button_previous5(self, _):
-        if self.current_frame > 1:
+        if self.current_frame - 10 > 1:
             self.current_frame = self.current_frame - 10
             self.changed_button = True
             self.trigger_update()

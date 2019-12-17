@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import random
 from sklearn.preprocessing import StandardScaler
+from visualization_utils import *
 
 
 def construct_label(tem_y, new_length, label_length, class_num):
@@ -44,7 +45,7 @@ def construct_label(tem_y, new_length, label_length, class_num):
     return new_y
 
 
-def construct_feature(sub_path, columns_name, window_size, new_y_length, label_length, min_size_scenarios, class_num):
+def construct_feature_lane_change(sub_path, columns_name, window_size, new_y_length, label_length, min_size_scenarios, class_num):
     """
     Construct training examples from one ego file
     :param sub_path: The path of one ego file
@@ -124,3 +125,134 @@ def normalization(data):
     scaler = StandardScaler()
     scaler.fit(data)
     return scaler.transform(data), scaler.mean_, scaler.scale_
+
+
+def normalization_cut_in(data, columns_name, object_slots_num):
+    """
+    Use sklearn to normalize the data
+    :param data: Data with shape (time_steps, feature_dims)
+    :return: Normalized data with it's per feature mean and standard deviation
+    """
+    ego_column_num = len(columns_name)
+    other_column = data[:, ego_column_num:]
+
+    # Append objects from all channels to two columns and calculate its mean and scale
+    new_other_column = np.empty((0, 2), float)
+    for i in range(object_slots_num):
+        temp = other_column[:, i * 2:i * 2 + 2]
+        new_other_column = np.append(new_other_column, temp, axis=0)
+
+    scaler = StandardScaler()
+    scaler.fit(new_other_column)
+    # For every object channel standardization
+    for i in range(object_slots_num):
+        data[:, ego_column_num + 2*i:ego_column_num + 2*i + 2] = (data[:, ego_column_num + 2*i:ego_column_num + 2*i + 2] - scaler.mean_)/scaler.scale_
+
+    return data
+
+
+def cut_in_list(dynamic_df, ego_df):
+    y_ = np.zeros((ego_df.shape[0], 1))
+    for i in range(dynamic_df.shape[0]):
+        # At the "cut in" moment, "cut in" object should not be too far from ego vehicle
+        if (dynamic_df['cut_in_left'][i] == 1) and (dynamic_df['pos_x'][i] < 60):
+            frame_num = dynamic_df['frame'][i]
+            if ego_df['speed'][int(frame_num)] > 80:
+                y_[frame_num] = 1
+            continue
+        if (dynamic_df['cut_in_right'][i] == 1) and (dynamic_df['pos_x'][i] < 60):
+            frame_num = dynamic_df['frame'][i]
+            if ego_df['speed'][int(frame_num)] > 80:
+                y_[frame_num] = 2
+    return y_
+
+
+def construct_cut_in_X(start_frame, end_frame, ego_file, dynamic, static, object_slots_num, window_size, columns_name):
+    # The first part of temp_x is the ego status, the second part is coordinates of surrounding object
+    temp_x = np.zeros((window_size, len(columns_name)+object_slots_num*2))
+    temp_x[:, 0:len(columns_name)] = ego_file[columns_name][start_frame:end_frame]
+    # check which objects are in the current time window
+    i = 0
+    for obj in dynamic:
+        # Choose only first "object_slots_num" showed object
+        if i >= object_slots_num:
+            break
+        obj_id = obj['obj_id']
+        obj_static = static[obj_id]
+        initial_obj_frame = obj_static['initial_frame']
+        total_obj_frames = obj_static['total_frames']
+        # Actually here is end_obj_frame + 1
+        end_obj_frame = initial_obj_frame + total_obj_frames
+        # The involved surrounding vehicle should also be not far from ego vehicle
+        if initial_obj_frame < end_frame and start_frame < end_obj_frame and obj['pos_x'][0] < 60:
+            if initial_obj_frame <= start_frame and end_obj_frame < end_frame:
+                temp_x[:end_obj_frame - start_frame, len(columns_name) + i * 2] = obj['pos_x'][start_frame-initial_obj_frame:]
+                temp_x[:end_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][start_frame-initial_obj_frame:]
+                temp_x[end_obj_frame - start_frame:, len(columns_name) + i * 2] = obj['pos_x'][-1]
+                temp_x[end_obj_frame - start_frame:, len(columns_name) + 1 + i * 2] = obj['pos_y'][-1]
+            if initial_obj_frame > start_frame and end_obj_frame < end_frame:
+                temp_x[initial_obj_frame-start_frame:end_obj_frame - start_frame, len(columns_name) + i * 2] = obj['pos_x'][:]
+                temp_x[initial_obj_frame-start_frame:end_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][:]
+                temp_x[:initial_obj_frame - start_frame, len(columns_name) + i * 2] = obj['pos_x'][0]
+                temp_x[:initial_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_x'][0]
+                temp_x[end_obj_frame - start_frame:, len(columns_name) + i * 2] = obj['pos_x'][-1]
+                temp_x[end_obj_frame - start_frame:, len(columns_name) + 1 + i * 2] = obj['pos_y'][-1]
+            if initial_obj_frame > start_frame and end_obj_frame >= end_frame:
+                temp_x[initial_obj_frame-start_frame:, len(columns_name) + i * 2] = obj['pos_x'][:end_frame-initial_obj_frame]
+                temp_x[initial_obj_frame-start_frame:, len(columns_name) + 1 + i * 2] = obj['pos_y'][:end_frame-initial_obj_frame]
+                temp_x[:initial_obj_frame-start_frame, len(columns_name) + i * 2] = obj['pos_x'][0]
+                temp_x[:initial_obj_frame-start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][0]
+            if initial_obj_frame < start_frame and end_obj_frame > end_frame:
+                temp_x[:, len(columns_name) + i * 2] = obj['pos_x'][start_frame - initial_obj_frame:end_frame-initial_obj_frame]
+                temp_x[:, len(columns_name) + 1 + i * 2] = obj['pos_y'][start_frame - initial_obj_frame:end_frame-initial_obj_frame]
+            i += 1
+    return temp_x
+
+
+def construct_feature_cut_in(ego_file, dynamic_file, static_file, columns_name, window_size, new_y_length, label_length,
+                                         min_size_scenarios, class_num, object_slots_num):
+    cut_in_ls = cut_in_list(dynamic_file, ego_file)
+    index_ls = [idx for idx, item in enumerate(cut_in_ls) if item != 0]
+    dynamic = process_dynamic(dynamic_file)
+    static = process_static(static_file)
+    # Two list to append X and Y from every example
+    x = []
+    y = []
+
+    if len(index_ls) == 0:
+        return -1, -1, False
+
+    for idx, item in enumerate(cut_in_ls):
+        if item != 0:
+            # Random a number to cut the lane change section
+            r = random.randint(0, window_size - min_size_scenarios + 1)
+            # Prevent exceed range
+            if idx + r >= ego_file.shape[0]-1 or idx + r - window_size < 0:
+                continue
+            temp_x = construct_cut_in_X(idx + r - window_size, idx + r, ego_file, dynamic, static, object_slots_num, window_size, columns_name)
+            temp_y = cut_in_ls[idx + r - window_size:idx + r]
+            temp_y = construct_label(temp_y, new_y_length, label_length, class_num)
+            x.append(temp_x)
+            y.append(temp_y)
+
+            # Do this twice to synthetic more data
+            r = random.randint(0, window_size - min_size_scenarios + 1)
+            # Prevent exceed range
+            if r + idx >= ego_file.shape[0] - 1 or idx + r - window_size < 0:
+                continue
+            temp_x = construct_cut_in_X(idx + r - window_size, idx + r, ego_file, dynamic, static, object_slots_num, window_size, columns_name)
+            temp_y = cut_in_ls[idx + r - window_size:idx + r]
+            temp_y = construct_label(temp_y, new_y_length, label_length, class_num)
+            x.append(temp_x)
+            y.append(temp_y)
+
+    # Concatenate all the examples from lists
+    if len(x) == 0:
+        return -1, -1, False
+    else:
+        examples = np.concatenate([i for i in x], axis=0)
+        labels = np.concatenate([i for i in y], axis=0)
+        return examples, labels, True
+
+
+

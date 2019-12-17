@@ -4,10 +4,12 @@ from NN_preprocess_utils import *
 
 if __name__ == "__main__":
 
-    path = r'..\preprocessed_data'
+    path = r'..\preprocessed_data\test_without_steering_angle'
     # Walk through every ego data
     file_list = []
     for root, dirs, files in os.walk(path):
+        # Remove sum directory
+        del dirs[:]
         for file in files:
             if file.endswith("ego.csv"):
                 file_list.append(os.path.join(root, file))
@@ -31,7 +33,7 @@ if __name__ == "__main__":
 
     for sub_path in file_list:
         print(sub_path)
-        x, y, exist_flag = construct_feature(sub_path, columns_name, window_size, new_y_length, label_length, min_size_scenarios, class_num)
+        x, y, exist_flag = construct_feature_lane_change(sub_path, columns_name, window_size, new_y_length, label_length, min_size_scenarios, class_num)
         if exist_flag:
             X_list.append(x)
             Y_list.append(y)
@@ -50,8 +52,8 @@ if __name__ == "__main__":
 
     mean_std = np.reshape(np.concatenate((mean, std), axis=0), (2, len(columns_name)))
 
-    np.save('{}\\X_without_steering_ang.npy'.format(path), X)
-    np.save('{}\\Y_without_steering_ang.npy'.format(path), Y)
-    np.save('{}\\mean_std_without_steering_ang.npy'.format(path), mean_std)
+    np.save('{}\\X_without_steering_ang_only.npy'.format(path), X)
+    np.save('{}\\Y_without_steering_ang_only.npy'.format(path), Y)
+    np.save('{}\\mean_std_without_steering_ang_only.npy'.format(path), mean_std)
 
 
