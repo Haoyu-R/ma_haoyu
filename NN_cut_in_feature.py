@@ -34,11 +34,11 @@ if __name__ == "__main__":
     new_y_length = int((window_size - 7) / 2) + 1
     # How many object can be included in the input of NN
     object_slots_num = 6
-    total = 0
 
     X_list = []
     Y_list = []
 
+    # Loop through every files
     for idx in range(len(file_ego_list)):
         print(file_ego_list[idx])
         ego_file = pd.read_csv(file_ego_list[idx])
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     X = np.concatenate([x for x in X_list], axis=0)
     Y = np.concatenate([y for y in Y_list], axis=0)
-
+    # Standardization X
     X = normalization_cut_in(X, columns_name, object_slots_num)
 
     # Reshape X and Y to fit the input of NN

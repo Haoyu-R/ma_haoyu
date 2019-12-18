@@ -135,8 +135,8 @@ from keras.callbacks import TensorBoard
 tf.keras.backend.clear_session()
 
 # Some hyper-parameters
-epochs = 100
-batch_size = 256
+epochs = 200
+batch_size = 128
 filters = 64
 kernel_size = 7
 strides = 2
@@ -162,27 +162,27 @@ Y_train = Y[portion:, :, :]
 # print("Train on {} samples".format(X.shape[0]-portion))
 # print("Validate on {} samples".format(portion))
 
-# model = Sequential([
-#     Conv1D(filters=filters, kernel_size=kernel_size, strides=strides, input_shape=input_shape),
-#     BatchNormalization(),
-#     Activation('relu'),
-#     Dropout(0.5),
-#     Bidirectional(GRU(128, return_sequences=True)),
-#     Dropout(0.5),
-#     BatchNormalization(),
-#     Bidirectional(GRU(128, return_sequences=True)),
-#     Dropout(0.5),
-#     BatchNormalization(),
-#     Dropout(0.5),
-#     TimeDistributed(Dense(3, activation='softmax'))
-# ])
+model = Sequential([
+    Conv1D(filters=filters, kernel_size=kernel_size, strides=strides, input_shape=input_shape),
+    BatchNormalization(),
+    Activation('relu'),
+    Dropout(0.5),
+    Bidirectional(GRU(256, return_sequences=True)),
+    Dropout(0.5),
+    BatchNormalization(),
+    Bidirectional(GRU(256, return_sequences=True)),
+    Dropout(0.5),
+    BatchNormalization(),
+    Dropout(0.5),
+    TimeDistributed(Dense(3, activation='softmax'))
+])
 
 # #print the computation graph in png
 # plot_model(model, to_file=r'{}\model_all_{}.png'.format(path, num_4_name), show_shapes=True, show_layer_names=True)
 
 
-# model.compile(optimizer="adam", loss='categorical_crossentropy', metrics=['acc'])
-model = load_model(r'C:\Users\A6OJTFD\Desktop\MDM data process\NN_data\model_13_without_steering_GRU_bi.h5')
+model.compile(optimizer="adam", loss='categorical_crossentropy', metrics=['acc'])
+# model = load_model(r'C:\Users\A6OJTFD\Desktop\MDM data process\NN_data\model_13_without_steering_GRU_bi.h5')
 # log_dir = "logs\\fit{}\\".format(num_4_name) + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 # tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 

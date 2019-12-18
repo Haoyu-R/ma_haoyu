@@ -134,6 +134,7 @@ def normalization_cut_in(data, columns_name, object_slots_num):
     :return: Normalized data with it's per feature mean and standard deviation
     """
     ego_column_num = len(columns_name)
+    data[:, :ego_column_num], _, _ = normalization(data[:, :ego_column_num])
     other_column = data[:, ego_column_num:]
 
     # Append objects from all channels to two columns and calculate its mean and scale
@@ -152,6 +153,12 @@ def normalization_cut_in(data, columns_name, object_slots_num):
 
 
 def cut_in_list(dynamic_df, ego_df):
+    """
+    Find out where left and right cut in happen. 1 = left cut in; 2 = right cut in
+    :param dynamic_df:
+    :param ego_df:
+    :return:
+    """
     y_ = np.zeros((ego_df.shape[0], 1))
     for i in range(dynamic_df.shape[0]):
         # At the "cut in" moment, "cut in" object should not be too far from ego vehicle
@@ -168,9 +175,23 @@ def cut_in_list(dynamic_df, ego_df):
 
 
 def construct_cut_in_X(start_frame, end_frame, ego_file, dynamic, static, object_slots_num, window_size, columns_name):
-    # The first part of temp_x is the ego status, the second part is coordinates of surrounding object
+    """
+    For every cut in scenarios window construct corresponding input X window
+    :param start_frame:
+    :param end_frame:
+    :param ego_file:
+    :param dynamic:
+    :param static:
+    :param object_slots_num:
+    :param window_size:
+    :param columns_name:
+    :return:
+    """
+    # The first part of temp_x is the ego status, the second part is slots of surrounding objects, each slot include
+    # two dimension: x and y
     temp_x = np.zeros((window_size, len(columns_name)+object_slots_num*2))
-    temp_x[:, 0:len(columns_name)] = ego_file[columns_name][start_frame:end_frame]
+    # Get ego vehicle info
+    temp_x[:, :len(columns_name)] = ego_file[columns_name][start_frame:end_frame]
     # check which objects are in the current time window
     i = 0
     for obj in dynamic:
@@ -184,35 +205,58 @@ def construct_cut_in_X(start_frame, end_frame, ego_file, dynamic, static, object
         # Actually here is end_obj_frame + 1
         end_obj_frame = initial_obj_frame + total_obj_frames
         # The involved surrounding vehicle should also be not far from ego vehicle
-        if initial_obj_frame < end_frame and start_frame < end_obj_frame and obj['pos_x'][0] < 60:
-            if initial_obj_frame <= start_frame and end_obj_frame < end_frame:
-                temp_x[:end_obj_frame - start_frame, len(columns_name) + i * 2] = obj['pos_x'][start_frame-initial_obj_frame:]
-                temp_x[:end_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][start_frame-initial_obj_frame:]
+        if initial_obj_frame < end_frame and start_frame < end_obj_frame:
+            # Four situations of each object frame in the window related to start_frame and end_frame of window
+            if initial_obj_frame <= start_frame and end_obj_frame < end_frame and obj['pos_x'][start_frame - initial_obj_frame] < 80 and abs(obj['pos_y'][start_frame - initial_obj_frame]) < 15:
+                temp_x[:end_obj_frame - start_frame, len(columns_name) + i * 2] = obj['pos_x'][start_frame - initial_obj_frame:]
+                temp_x[:end_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][start_frame - initial_obj_frame:]
                 temp_x[end_obj_frame - start_frame:, len(columns_name) + i * 2] = obj['pos_x'][-1]
                 temp_x[end_obj_frame - start_frame:, len(columns_name) + 1 + i * 2] = obj['pos_y'][-1]
-            if initial_obj_frame > start_frame and end_obj_frame < end_frame:
+                i += 1
+                continue
+            if initial_obj_frame > start_frame and end_obj_frame < end_frame and obj['pos_x'][0] < 80 and abs(obj['pos_y'][0]) < 15:
                 temp_x[initial_obj_frame-start_frame:end_obj_frame - start_frame, len(columns_name) + i * 2] = obj['pos_x'][:]
                 temp_x[initial_obj_frame-start_frame:end_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][:]
                 temp_x[:initial_obj_frame - start_frame, len(columns_name) + i * 2] = obj['pos_x'][0]
-                temp_x[:initial_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_x'][0]
+                temp_x[:initial_obj_frame - start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][0]
                 temp_x[end_obj_frame - start_frame:, len(columns_name) + i * 2] = obj['pos_x'][-1]
                 temp_x[end_obj_frame - start_frame:, len(columns_name) + 1 + i * 2] = obj['pos_y'][-1]
-            if initial_obj_frame > start_frame and end_obj_frame >= end_frame:
-                temp_x[initial_obj_frame-start_frame:, len(columns_name) + i * 2] = obj['pos_x'][:end_frame-initial_obj_frame]
-                temp_x[initial_obj_frame-start_frame:, len(columns_name) + 1 + i * 2] = obj['pos_y'][:end_frame-initial_obj_frame]
+                i += 1
+                continue
+            if initial_obj_frame > start_frame and end_obj_frame >= end_frame and obj['pos_x'][0] < 80 and abs(obj['pos_y'][0]) < 15:
+                temp_x[initial_obj_frame-start_frame:, len(columns_name) + i * 2] = obj['pos_x'][:end_frame - initial_obj_frame]
+                temp_x[initial_obj_frame-start_frame:, len(columns_name) + 1 + i * 2] = obj['pos_y'][:end_frame - initial_obj_frame]
                 temp_x[:initial_obj_frame-start_frame, len(columns_name) + i * 2] = obj['pos_x'][0]
                 temp_x[:initial_obj_frame-start_frame, len(columns_name) + 1 + i * 2] = obj['pos_y'][0]
-            if initial_obj_frame < start_frame and end_obj_frame > end_frame:
+                i += 1
+                continue
+            if initial_obj_frame < start_frame and end_obj_frame > end_frame and obj['pos_x'][start_frame - initial_obj_frame] < 80 and abs(obj['pos_y'][start_frame - initial_obj_frame]) < 15:
                 temp_x[:, len(columns_name) + i * 2] = obj['pos_x'][start_frame - initial_obj_frame:end_frame-initial_obj_frame]
                 temp_x[:, len(columns_name) + 1 + i * 2] = obj['pos_y'][start_frame - initial_obj_frame:end_frame-initial_obj_frame]
-            i += 1
+                i += 1
+                continue
     return temp_x
 
 
 def construct_feature_cut_in(ego_file, dynamic_file, static_file, columns_name, window_size, new_y_length, label_length,
                                          min_size_scenarios, class_num, object_slots_num):
+    """
+    Construct the input and reference label for NN from every file group
+    :param ego_file: ego_file from process_main
+    :param dynamic_file: dynamic_file from process_main
+    :param static_file: static_file from process_main
+    :param columns_name: names of columns of ego state that include in input
+    :param window_size: How long should each input windows has
+    :param new_y_length: How long should each output has
+    :param label_length: How long should a positive label has
+    :param min_size_scenarios: How long should a scenario at least has
+    :param class_num: How many classes are there
+    :param object_slots_num: At most how many objects want to have in one window
+    :return: Input to NN and reference output
+    """
     cut_in_ls = cut_in_list(dynamic_file, ego_file)
     index_ls = [idx for idx, item in enumerate(cut_in_ls) if item != 0]
+    # Use group by to group the objects in dict
     dynamic = process_dynamic(dynamic_file)
     static = process_static(static_file)
     # Two list to append X and Y from every example
@@ -224,12 +268,13 @@ def construct_feature_cut_in(ego_file, dynamic_file, static_file, columns_name, 
 
     for idx, item in enumerate(cut_in_ls):
         if item != 0:
-            # Random a number to cut the lane change section
+            # Random a number to cut the cut in section
             r = random.randint(0, window_size - min_size_scenarios + 1)
             # Prevent exceed range
             if idx + r >= ego_file.shape[0]-1 or idx + r - window_size < 0:
                 continue
             temp_x = construct_cut_in_X(idx + r - window_size, idx + r, ego_file, dynamic, static, object_slots_num, window_size, columns_name)
+            # Select the part from whole cut_in_ls where cut in happen
             temp_y = cut_in_ls[idx + r - window_size:idx + r]
             temp_y = construct_label(temp_y, new_y_length, label_length, class_num)
             x.append(temp_x)

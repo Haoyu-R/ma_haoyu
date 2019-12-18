@@ -32,9 +32,10 @@ batch_size = 256
 filters = 64
 kernel_size = 7
 strides = 2
-input_shape = (None, 3)
+object_slots_num = 6
+input_shape = (None, 3+object_slots_num*2)
 validation_split = 0.1
-num_4_name = 13
+num_4_name = 15
 learning_rate = 1e-1
 path = r"..\preprocessed_data\test_with_steering_angle"
 
@@ -47,9 +48,9 @@ Y = np.load(r'{}\Y_without_steering_ang_cut_in.npy'.format(path))
 
 # Split the data into train and validation set
 portion = int(X.shape[0] * validation_split)
-X_validation = X[:portion, :, :-1]
+X_validation = X[:portion, :, :]
 Y_validation = Y[:portion, :, :]
-X_train = X[portion:, :, :-1]
+X_train = X[portion:, :, :]
 Y_train = Y[portion:, :, :]
 # print("Train on {} samples".format(X.shape[0]-portion))
 # print("Validate on {} samples".format(portion))
@@ -75,12 +76,12 @@ model = Sequential([
 
 model.compile(optimizer="adam", loss='categorical_crossentropy', metrics=['acc'])
 
-log_dir = "logs\\fit{}\\".format(num_4_name) + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
+# log_dir = "logs\\fit{}\\".format(num_4_name) + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+# tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
 
 # lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lr_schedule)
 
-history = model.fit(X_train, Y_train, batch_size=batch_size, validation_data=(X_validation, Y_validation), epochs=epochs, verbose=2, callbacks=[tensorboard_callback])
+history = model.fit(X_train, Y_train, batch_size=batch_size, validation_data=(X_validation, Y_validation), epochs=epochs, verbose=2)
 
 # Used to find best learning rate
 # lrs = learning_rate * (10 ** (np.arange(epochs)/20))
@@ -88,7 +89,7 @@ history = model.fit(X_train, Y_train, batch_size=batch_size, validation_data=(X_
 # plt.show()
 
 # Save the NN model
-model.save(r'{}\model_{}_without_steering_GRU_bi.h5'.format(path, num_4_name))
+model.save(r'{}\model_{}_without_steering_GRU_cut_in.h5'.format(path, num_4_name))
 
 # Reshape Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = model.predict(X_validation, verbose=2)
@@ -120,13 +121,13 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper right')
 plt.tight_layout()
 # Save the training history picture
-plt.savefig(r"{}\training_loss_acc_{}_without_steering_GRU_bi".format(path, num_4_name))
+plt.savefig(r"{}\training_loss_acc_{}_without_steering_GRU_cut_in".format(path, num_4_name))
 # plt.show()
 
 
 # Save the history dict
 hist_df = pd.DataFrame(history.history)
-hist_csv_file = r'{}\history_{}_without_steering_GRU_bi.csv'.format(path, num_4_name)
+hist_csv_file = r'{}\history_{}_without_steering_GRU_cut_in.csv'.format(path, num_4_name)
 with open(hist_csv_file, mode='w') as f:
     hist_df.to_csv(f)
 
