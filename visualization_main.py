@@ -11,9 +11,12 @@ if __name__ == "__main__":
     # csv_path = r'..\MDM data process\processed_data\csv\first'
     # video_path = r'..\MDM data process\video\processed_video\20191029_133209_4315.avi'
     # csv_path = r'..\MDM data process\processed_data\csv\second'
+    # file_prefix = r'0_cv'
+    # video_path = r'..\ma_haoyu\processed_video\20191029_130130_3015.avi'
+    # csv_path = r'..\ma_haoyu\processed_data\csv'
     file_prefix = r'0_cv'
-    video_path = r'..\ma_haoyu\processed_video\20191029_130130_3015.avi'
-    csv_path = r'..\ma_haoyu\processed_data\csv'
+    video_path = r'..\ma_haoyu\processed_video\20191029_133209_4315.avi'
+    csv_path = r'..\ma_haoyu\processed_data\csv\second'
     ego, dynamic_raw, static_raw = read_files(csv_path, file_prefix)
     dynamic = process_dynamic(dynamic_raw)
     static = process_static(static_raw)
