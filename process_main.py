@@ -14,6 +14,7 @@ if __name__ == "__main__":
 
     # If need to run index check, be careful if want to synchronize with video, do not set to True
     check_valid_index = False
+
     if os.path.isdir(read_path):
         csv_files_path = glob.glob(read_path + r'\*.csv')
         for index, csv_path in enumerate(csv_files_path):

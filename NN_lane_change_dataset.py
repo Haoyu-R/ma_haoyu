@@ -5,6 +5,7 @@ from NN_preprocess_utils import *
 if __name__ == "__main__":
 
     path = r'..\preprocessed_data\test_without_steering_angle'
+    path = r'..\preprocessed_data'
     # Walk through every ego data
     file_list = []
     for root, dirs, files in os.walk(path):

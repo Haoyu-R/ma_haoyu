@@ -13,15 +13,14 @@ from sklearn.metrics import classification_report
 from keras.callbacks import TensorBoard
 
 # Deactivate the GPU
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Callback to early stop training
-class Callback(tf.keras.callbacks.Callback):
-    def on_epoch_end(self, epoch, logs={}):
-        if logs.get('loss') < 0.4:
-            print("Loss achieved, so cancel the progress")
-            self.model.stop_training = True
-
+# class Callback(tf.keras.callbacks.Callback):
+#     def on_epoch_end(self, epoch, logs={}):
+#         if logs.get('loss') < 0.4:
+#             print("Loss achieved, so cancel the progress")
+#             self.model.stop_training = True
 
 # Clear back sessions
 tf.keras.backend.clear_session()
@@ -32,19 +31,22 @@ batch_size = 256
 filters = 64
 kernel_size = 7
 strides = 2
+ego_dim = 4
 object_slots_num = 6
-input_shape = (None, 3+object_slots_num*2)
+obj_dim = 4
+input_shape = (None, ego_dim+object_slots_num*obj_dim)
 validation_split = 0.1
-num_4_name = 15
+num_4_name = 20
 learning_rate = 1e-1
 path = r"..\preprocessed_data\test_with_steering_angle"
+# path = r"..\preprocessed_data"
 
 # Used to select the best learning rate
 # lr_schedule = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4 * 10 ** (epoch/20))
 
 # Load the data
-X = np.load(r'{}\X_without_steering_ang_cut_in.npy'.format(path))
-Y = np.load(r'{}\Y_without_steering_ang_cut_in.npy'.format(path))
+X = np.load(r'{}\X_all.npy'.format(path))
+Y = np.load(r'{}\Y_all.npy'.format(path))
 
 # Split the data into train and validation set
 portion = int(X.shape[0] * validation_split)
@@ -60,19 +62,18 @@ model = Sequential([
     BatchNormalization(),
     Activation('relu'),
     Dropout(0.5),
-    Bidirectional(GRU(128, return_sequences=True)),
+    GRU(256, return_sequences=True),
     Dropout(0.5),
     BatchNormalization(),
-    Bidirectional(GRU(128, return_sequences=True)),
+    GRU(256, return_sequences=True),
     Dropout(0.5),
     BatchNormalization(),
     Dropout(0.5),
-    TimeDistributed(Dense(3, activation='softmax'))
+    TimeDistributed(Dense(5, activation='softmax'))
 ])
 
 # #print the computation graph in png
 # plot_model(model, to_file=r'{}\model_all_{}.png'.format(path, num_4_name), show_shapes=True, show_layer_names=True)
-
 
 model.compile(optimizer="adam", loss='categorical_crossentropy', metrics=['acc'])
 
@@ -89,14 +90,14 @@ history = model.fit(X_train, Y_train, batch_size=batch_size, validation_data=(X_
 # plt.show()
 
 # Save the NN model
-model.save(r'{}\model_{}_without_steering_GRU_cut_in.h5'.format(path, num_4_name))
+model.save(r'{}\model_{}_with_steering_both.h5'.format(path, num_4_name))
 
 # Reshape Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = model.predict(X_validation, verbose=2)
-Y_valid_pred = Y_valid_pred.reshape((Y_valid_pred.shape[0] * Y_valid_pred.shape[1], 3))
+Y_valid_pred = Y_valid_pred.reshape((Y_valid_pred.shape[0] * Y_valid_pred.shape[1], 5))
 Y_pred_bool = np.argmax(Y_valid_pred, axis=1)
 
-Y_validation = Y_validation.reshape((Y_validation.shape[0] * Y_validation.shape[1], 3))
+Y_validation = Y_validation.reshape((Y_validation.shape[0] * Y_validation.shape[1], 5))
 Y_valid_bool = np.argmax(Y_validation, axis=1)
 
 # Using sklearn to evaluate other metrics of model
@@ -121,14 +122,14 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper right')
 plt.tight_layout()
 # Save the training history picture
-plt.savefig(r"{}\training_loss_acc_{}_without_steering_GRU_cut_in".format(path, num_4_name))
+# plt.savefig(r"{}\training_loss_acc_{}_without_steering_with_speed_GRU_cut_in_bi".format(path, num_4_name))
 # plt.show()
 
 
 # Save the history dict
-hist_df = pd.DataFrame(history.history)
-hist_csv_file = r'{}\history_{}_without_steering_GRU_cut_in.csv'.format(path, num_4_name)
-with open(hist_csv_file, mode='w') as f:
-    hist_df.to_csv(f)
+# hist_df = pd.DataFrame(history.history)
+# hist_csv_file = r'{}\history_{}_without_steering_with_speed_GRU_cut_in_bi.csv'.format(path, num_4_name)
+# with open(hist_csv_file, mode='w') as f:
+#     hist_df.to_csv(f)
 
 # os.system("shutdown /s /t 1")

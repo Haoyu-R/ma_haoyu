@@ -15,14 +15,15 @@ tf.keras.backend.clear_session()
 # validation_split = 0.1
 object_slots_num = 6
 
-X = np.load(r'..\preprocessed_data\test_with_steering_angle\X_without_steering_ang_cut_in.npy')
-Y = np.load(r'..\preprocessed_data\test_with_steering_angle\Y_without_steering_ang_cut_in.npy')
+X = np.load(r'..\preprocessed_data\X_without_steering_ang_with_speed_ang_cut_in.npy')
+Y = np.load(r'..\preprocessed_data\Y_without_steering_ang_with_speed_ang_cut_in.npy')
+
 
 X_validation = X[:, :, :]
 Y_validation = Y[:, :, :]
 
 # Feature selection
-trained_model = load_model(r'NN_data\model_16_without_steering_GRU_bi_cut_in.h5')
+trained_model = load_model(r'NN_data\model_19_without_steering_with_speed_GRU_cut_in_bi.h5')
 trained_model.summary()
 # Reshape predicted Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = trained_model.predict(X_validation, verbose=2)
@@ -49,10 +50,15 @@ print(
 # Reshape to dims (X_validation.shape[0]*X_validation.shape[1], X_validation.shape[2]) to make shuffle easier
 X_reversed = X_validation.reshape(X_validation.shape[0] * X_validation.shape[1], X_validation.shape[2])
 
-name_list = ['speed', 'acc_x', 'acc_y', 'obj1_pos_x', 'obj1_pos_y', 'obj2_pos_x', 'obj2_pos_y', 'obj3_pos_x',
-             'obj3_pos_y', 'obj4_pos_x', 'obj4_pos_y', 'obj5_pos_x', 'obj5_pos_y', 'obj6_pos_x', 'obj6_pos_y']
+# name_list = ['speed', 'acc_x', 'acc_y', 'obj1_pos_x', 'obj1_pos_y', 'obj2_pos_x', 'obj2_pos_y', 'obj3_pos_x',
+#              'obj3_pos_y', 'obj4_pos_x', 'obj4_pos_y', 'obj5_pos_x', 'obj5_pos_y', 'obj6_pos_x', 'obj6_pos_y']
+name_list = ['speed', 'acc_x', 'acc_y', 'obj1_pos_x', 'obj1_pos_y', 'obj1_speed_x', 'obj1_speed_y', 'obj2_pos_x', 'obj2_pos_y', 'obj2_speed_x', 'obj2_speed_y', 'obj3_pos_x',
+             'obj3_pos_y', 'obj3_speed_x', 'obj3_speed_y', 'obj4_pos_x', 'obj4_pos_y', 'obj4_speed_x', 'obj4_speed_y', 'obj5_pos_x', 'obj5_pos_y', 'obj5_speed_x', 'obj5_speed_y', 'obj6_pos_x', 'obj6_pos_y', 'obj6_speed_x', 'obj6_speed_y']
 # name_list = ['speed', 'acc_x', 'acc_y']
 # name_list = ['speed', 'acc_x', 'acc_y', 'steering_ang']
+# name_list = ['speed', 'acc_x', 'acc_y', 'steering_ang', 'obj1_pos_x', 'obj1_pos_y', 'obj1_speed_x', 'obj1_speed_y', 'obj2_pos_x', 'obj2_pos_y', 'obj2_speed_x', 'obj2_speed_y', 'obj3_pos_x',
+#              'obj3_pos_y', 'obj3_speed_x', 'obj3_speed_y', 'obj4_pos_x', 'obj4_pos_y', 'obj4_speed_x', 'obj4_speed_y', 'obj5_pos_x', 'obj5_pos_y', 'obj5_speed_x', 'obj5_speed_y', 'obj6_pos_x', 'obj6_pos_y', 'obj6_speed_x', 'obj6_speed_y']
+
 
 err_list = []
 f1_list = []

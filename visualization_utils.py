@@ -54,7 +54,7 @@ def process_dynamic(dynamic_df):
                                      'pos_x': rows['pos_x'].values,
                                      'pos_y': rows['pos_y'].values,
                                      'speed_x': rows['speed_x'].values,
-                                     'speed_y': rows['speed_x'].values,
+                                     'speed_y': rows['speed_y'].values,
                                      'cut_in_left': rows['cut_in_left'].values,
                                      'cut_in_right': rows['cut_in_right'].values}
         current_obj += 1

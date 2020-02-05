@@ -1,34 +1,27 @@
 import tensorflow as tf
-from tensorflow import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, TimeDistributed, Conv1D, GRU, BatchNormalization, Activation
-from keras.optimizers import Adam
-import matplotlib.pyplot as plt
 import numpy as np
 import os
 from sklearn.metrics import classification_report
 from keras.models import load_model
-import random
 from keras.losses import CategoricalCrossentropy
 
 # Deactivate the GPU
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # Clear back sessions
 tf.keras.backend.clear_session()
 
-# Some hyper-parameters
-# validation_split = 0.1
-
-X = np.load(r'NN_data\X.npy')
-Y = np.load(r'NN_data\Y.npy')
+path = r"..\preprocessed_data\test_with_steering_angle"
+X = np.load('{}\\X_with_steering_with_lane_with_obj.npy'.format(path))
+Y = np.load('{}\\Y_with_steering_with_lane_with_obj.npy'.format(path))
 
 X_validation = X[:, :, :]
 Y_validation = Y[:, :, :]
 
 # # Feature selection
-trained_model = load_model(r'NN_data\model_14_GRU_bi.h5')
+trained_model = load_model(r'NN_data\model_22_new_lane_change_importance_with_all.h5')
 trained_model.summary()
+
 # Reshape predicted Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = trained_model.predict(X_validation, verbose=2)
 Y_valid_pred_temp = Y_valid_pred.reshape((Y_valid_pred.shape[0]*Y_valid_pred.shape[1], 3))
@@ -50,10 +43,12 @@ print("f1_score_benchmark: (free driving-{:.2f})  (left lane change-{:.2f})  (ri
 # Reshape to dims (X_validation.shape[0]*X_validation.shape[1], X_validation.shape[2]) to make shuffle easier
 X_reversed = X_validation.reshape(X_validation.shape[0]*X_validation.shape[1], X_validation.shape[2])
 
-name_list = ['speed', 'acc_x', 'acc_y', 'steering_ang']
+name_list = ['speed', 'acc_x', 'acc_y', 'steering_ang', 'ego_line_left_distance_y', 'ego_line_right_distance_y', 'obj1_x', 'obj1_y', 'obj1_v_x', 'obj1_v_y', 'obj2_x', 'obj2_y', 'obj2_v_x', 'obj2_v_y', 'obj3_x', 'obj3_y', 'obj3_v_x', 'obj3_v_y']
 err_list = []
 f1_list = []
+
 for i in range(X_reversed.shape[1]):
+    print(i)
 
     X_reversed_temp = X_reversed
     # Shuffle the selected feature column
