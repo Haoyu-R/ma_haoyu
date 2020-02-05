@@ -1,8 +1,4 @@
 import tensorflow as tf
-from tensorflow import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, TimeDistributed, Conv1D, GRU, BatchNormalization, Activation
-from keras.optimizers import Adam
 from keras.models import load_model
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -27,12 +23,20 @@ Y = np.load(r'NN_data\Y.npy')
 # X = np.load(r'NN_data\X.npy')
 # Y = np.load(r'NN_data\Y.npy')
 
-trained_model = load_model(r'NN_data\model_without_steering_ang_6.h5')
-# trained_model = load_model(r'NN_data\my_model.h5')
-num_ = 1000
+# <<<<<<< HEAD
+# trained_model = load_model(r'NN_data\model_without_steering_ang_6.h5')
+# # trained_model = load_model(r'NN_data\my_model.h5')
+# num_ = 1000
+# # Following visualize the label in on sample
+# for i in range(10):
+#     num = num_ + i
+# =======
+trained_model = load_model(r'NN_data\model_without_steering_ang_8.h5')
+num_ = 1050
 # Following visualize the label in on sample
-for i in range(10):
-    num = num_ + i
+for i in range(100):
+    num = num_+i
+# >>>>>>> 8a8a09d237282c56f77286390fadbd3946ebb716
     y_test = trained_model.predict(np.expand_dims(X[num, :, :-1], axis=0))
 
     fig = plt.figure()
@@ -79,24 +83,39 @@ for i in range(10):
 
     axes_4 = fig.add_subplot(2, 3, 4)
     axes_4.plot(Y[num, :, 0])
-    axes_4.set_title('Free driving label - Real')
-    axes_4.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%g' % (x * 0.08)))
-    axes_4.set_ylim([-0.1, 1.1])
-
-    axes_5 = fig.add_subplot(2, 3, 5)
-    axes_5.plot(Y[num, :, 1])
-    axes_5.set_title('Left lane change label - Real')
-    axes_5.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%g' % (x * 0.08)))
-    axes_5.set_ylim([-0.1, 1.1])
-
-    axes_6 = fig.add_subplot(2, 3, 6)
-    axes_6.plot(Y[num, :, 2])
-    axes_6.set_title('Right lane change label - Real')
-    axes_6.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%g' % (x * 0.08)))
-    axes_6.set_ylim([-0.1, 1.1])
-
-    # fig.tight_layout()
-    plt.show()
+# <<<<<<< HEAD
+#     axes_4.set_title('Free driving label - Real')
+# =======
+#     axes_4.set_title('Free driving label - Reference')
+# >>>>>>> 8a8a09d237282c56f77286390fadbd3946ebb716
+#     axes_4.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%g' % (x * 0.08)))
+#     axes_4.set_ylim([-0.1, 1.1])
+#
+#     axes_5 = fig.add_subplot(2, 3, 5)
+#     axes_5.plot(Y[num, :, 1])
+# <<<<<<< HEAD
+#     axes_5.set_title('Left lane change label - Real')
+# =======
+#     axes_5.set_title('Left lane change label - Reference')
+# >>>>>>> 8a8a09d237282c56f77286390fadbd3946ebb716
+#     axes_5.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%g' % (x * 0.08)))
+#     axes_5.set_ylim([-0.1, 1.1])
+#
+#     axes_6 = fig.add_subplot(2, 3, 6)
+#     axes_6.plot(Y[num, :, 2])
+# <<<<<<< HEAD
+#     axes_6.set_title('Right lane change label - Real')
+#     axes_6.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%g' % (x * 0.08)))
+#     axes_6.set_ylim([-0.1, 1.1])
+#
+#     # fig.tight_layout()
+# =======
+#     axes_6.set_title('Right lane change label - Reference')
+#     axes_6.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '%g' % (x * 0.08)))
+#     axes_6.set_ylim([-0.1, 1.1])
+#
+# >>>>>>> 8a8a09d237282c56f77286390fadbd3946ebb716
+#     plt.show()
 
 # plt.subplot(2, 3, 1)
 # plt.plot(y_test[0, :, 0])

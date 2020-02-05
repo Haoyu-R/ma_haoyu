@@ -821,7 +821,7 @@ def lane_change_detection(ego_df_line):
                 lane_change_left_list.append(i)
                 continue
 
-        if ego_df_line['ego_line_right_distance_y'][i] > 0:
+        if ego_df_line['ego_line_right_distance_y'][i] > 0 and not left_change:
             right_change = True
             left_change = False
         if right_change:

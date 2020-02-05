@@ -54,7 +54,7 @@ def process_dynamic(dynamic_df):
                                      'pos_x': rows['pos_x'].values,
                                      'pos_y': rows['pos_y'].values,
                                      'speed_x': rows['speed_x'].values,
-                                     'speed_y': rows['speed_x'].values,
+                                     'speed_y': rows['speed_y'].values,
                                      'cut_in_left': rows['cut_in_left'].values,
                                      'cut_in_right': rows['cut_in_right'].values}
         current_obj += 1
@@ -224,7 +224,7 @@ class VisualizationPlot(object):
             print("There are no frames available with an index higher than {}.".format(self.maximum_frames))
 
     def update_button_previous5(self, _):
-        if self.current_frame > 1:
+        if self.current_frame - 10 > 1:
             self.current_frame = self.current_frame - 10
             self.changed_button = True
             self.trigger_update()

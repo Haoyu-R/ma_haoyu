@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, TimeDistributed, Conv1D, GRU, BatchNormalization, Activation, LSTM
+from keras.models import Sequential, load_model
+from keras.layers import Dense, Dropout, TimeDistributed, Conv1D, GRU, BatchNormalization, Activation, LSTM, Bidirectional
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,29 +15,12 @@ from keras.callbacks import TensorBoard
 # Deactivate the GPU
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-
-# Learning rate scheduler
-# def lr_schedule(epoch):
-#     if epoch < 5:
-#         return 0.1
-#     if 5 <= epoch < 300:
-#         return 0.001
-#     if 300 <= epoch < 500:
-#         return 0.0001
-#     if 500 <= epoch < 700:
-#         return 0.00001
-#     if 700 <= epoch < 900:
-#         return 0.000001
-#     if 900 <= epoch:
-#         return 0.0000001
-
-
 # Callback to early stop training
-# class Callback(tf.keras.callbacks.Callback):
-#     def on_epoch_end(self, epoch, logs={}):
-#         if logs.get('acc') > 0.985:
-#             print("Loss achieved, so cancel the progress")
-#             self.model.stop_training = True
+class Callback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        if logs.get('loss') < 0.4:
+            print("Loss achieved, so cancel the progress")
+            self.model.stop_training = True
 
 
 # Clear back sessions
@@ -49,22 +32,22 @@ batch_size = 256
 filters = 64
 kernel_size = 7
 strides = 2
-input_shape = (None, 3)
-validation_split = 0.10
-num_4_name = 7
+ego_dim = 3
+object_slots_num = 6
+obj_dim = 4
+input_shape = (None, ego_dim+object_slots_num*obj_dim)
+validation_split = 0.1
+num_4_name = 19
 learning_rate = 1e-1
 # path = r"..\preprocessed_data\test_with_steering_angle"
-# path = r'..\preprocessed_data'
-path = r"..\preprocessed_data\test_without_steering_angle"
+path = r"..\preprocessed_data"
 
 # Used to select the best learning rate
 # lr_schedule = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4 * 10 ** (epoch/20))
 
 # Load the data
-# X = np.load(r'{}\X.npy'.format(path))
-# Y = np.load(r'{}\Y.npy'.format(path))
-X = np.load('{}\\X_without_steering_ang_only.npy'.format(path))
-Y = np.load('{}\\Y_without_steering_ang_only.npy'.format(path))
+X = np.load(r'{}\X_without_steering_ang_with_speed_cut_in.npy'.format(path))
+Y = np.load(r'{}\Y_without_steering_ang_with_speed_cut_in.npy'.format(path))
 
 # Split the data into train and validation set
 portion = int(X.shape[0] * validation_split)
@@ -80,9 +63,11 @@ model = Sequential([
     BatchNormalization(),
     Activation('relu'),
     Dropout(0.5),
+    # Bidirectional(GRU(128, return_sequences=True)),
     GRU(128, return_sequences=True),
     Dropout(0.5),
     BatchNormalization(),
+    # Bidirectional(GRU(128, return_sequences=True)),
     GRU(128, return_sequences=True),
     Dropout(0.5),
     BatchNormalization(),
@@ -93,13 +78,11 @@ model = Sequential([
 # #print the computation graph in png
 # plot_model(model, to_file=r'{}\model_all_{}.png'.format(path, num_4_name), show_shapes=True, show_layer_names=True)
 
-
 model.compile(optimizer="adam", loss='categorical_crossentropy', metrics=['acc'])
 
 # log_dir = "logs\\fit{}\\".format(num_4_name) + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 # tensorboard_callback = TensorBoard(log_dir=log_dir, histogram_freq=1)
-# acc_callback = Callback()
-#
+
 # lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lr_schedule)
 
 history = model.fit(X_train, Y_train, batch_size=batch_size, validation_data=(X_validation, Y_validation), epochs=epochs, verbose=2)
@@ -110,7 +93,7 @@ history = model.fit(X_train, Y_train, batch_size=batch_size, validation_data=(X_
 # plt.show()
 
 # Save the NN model
-# model.save(r'{}\model_all_{}.h5'.format(path, num_4_name))
+model.save(r'{}\model_{}_without_steering_with_speed_GRU_cut_in_bi.h5'.format(path, num_4_name))
 
 # Reshape Y to dim (timesteps*m, feature_dims)
 Y_valid_pred = model.predict(X_validation, verbose=2)
@@ -142,14 +125,14 @@ plt.xlabel('epoch')
 plt.legend(['train', 'test'], loc='upper right')
 plt.tight_layout()
 # Save the training history picture
-# plt.savefig(r"{}\training_loss_acc_{}".format(path, num_4_name))
-plt.show()
+plt.savefig(r"{}\training_loss_acc_{}_without_steering_with_speed_GRU_cut_in_bi".format(path, num_4_name))
+# plt.show()
 
 
 # Save the history dict
-# hist_df = pd.DataFrame(history.history)
-# hist_csv_file = r'{}\history_{}.csv'.format(path, num_4_name)
-# with open(hist_csv_file, mode='w') as f:
-#     hist_df.to_csv(f)
+hist_df = pd.DataFrame(history.history)
+hist_csv_file = r'{}\history_{}_without_steering_with_speed_GRU_cut_in_bi.csv'.format(path, num_4_name)
+with open(hist_csv_file, mode='w') as f:
+    hist_df.to_csv(f)
 
 # os.system("shutdown /s /t 1")
