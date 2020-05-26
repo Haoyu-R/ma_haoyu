@@ -38,3 +38,12 @@ comparing diﬀerent structures of the neural network, converting GPS signal to 
   * choose_section_from_csv.py
   * ...
 
+## Dependencies for Running Locally
+* Python >= 3.7
+* Tensorflow > 2.0.0
+* Pandas > 1.0.2
+* Numpy > 1.18.0
+* Matplotlib > 3.1.1
+* Opencv > 4.2.0
+
+
